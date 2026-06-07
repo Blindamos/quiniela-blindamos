@@ -1,10 +1,10 @@
 import streamlit as st
-import os
 import pandas as pd
+import os
 from datetime import datetime
 
-# 1. Configuración y Estilos (Igual que antes)
-st.set_page_config(page_title="Quiniela Blindamos", page_icon="⚽", layout="centered")
+# --- 1. CONFIGURACIÓN Y ESTILOS CORPORATIVOS ---
+st.set_page_config(page_title="Quiniela Blindamos - Mundial 2026", page_icon="🛡️", layout="centered")
 
 st.markdown("""
     <style>
@@ -16,81 +16,114 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. Cabecera y Logo
+# --- 2. CABECERA Y LOGO ---
 ruta_logo = "logo.png"
 if os.path.exists(ruta_logo):
     st.image(ruta_logo, use_container_width=True)
 else:
     st.title("🛡️ BLINDAMOS")
-
 st.subheader("🏆 Quiniela Corporativa - Mundial 2026")
-st.write("¡Bienvenido al torneo de la oficina! Registra tus pronósticos.")
 st.markdown("---")
 
-# 3. Lista de partidos (Puedes agregar todos los que quieras aquí)
-partidos = [
-    {"id": 1, "local": "México", "visitante": "Sudáfrica"},
-    {"id": 2, "local": "Estados Unidos", "visitante": "Gales"},
-    {"id": 3, "local": "Canadá", "visitante": "Irlanda"}
-]
+# --- 3. DICCIONARIO DE BANDERAS (PREMIUM) ---
+banderas = {
+    'USA': '🇺🇸', 'Mexico': '🇲🇽', 'Canada': '🇨🇦', 'Uruguay': '🇺🇾', 'Argentina': '🇦🇷', 
+    'Brazil': '🇧🇷', 'Ecuador': '🇪🇨', 'Colombia': '🇨🇴', 'Spain': '🇪🇸', 'France': '🇫🇷', 
+    'Germany': '🇩🇪', 'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Portugal': '🇵🇹', 'Italy': '🇮🇹', 'Netherlands': '🇳🇱', 
+    'Belgium': '🇧🇪', 'Croatia': '🇭🇷', 'Denmark': '🇩🇰', 'Switzerland': '🇨🇭', 'Poland': '🇵🇱', 
+    'Serbia': '🇷🇸', 'Wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿', 'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'Ukraine': '🇺🇦', 'Czech Republic': '🇨🇿', 
+    'Austria': '🇦🇹', 'Hungary': '🇭🇺', 'Greece': '🇬🇷', 'Turkey': '🇹🇷', 'Japan': '🇯🇵', 
+    'South Korea': '🇰🇷', 'Australia': '🇦🇺', 'Iran': '🇮🇷', 'Saudi Arabia': '🇸🇦', 'Qatar': '🇶🇦', 
+    'Senegal': '🇸🇳', 'Morocco': '🇲🇦', 'Cameroon': '🇨🇲', 'Ghana': '🇬🇭', 'Nigeria': '🇳🇬', 
+    'Ivory Coast': '🇨🇮', 'South Africa': '🇿🇦', 'Algeria': '🇩🇿', 'Egypt': '🇪🇬', 
+    'Costa Rica': '🇨🇷', 'Panama': '🇵🇦', 'Honduras': '🇭🇳', 'Jamaica': '🇯🇲'
+}
 
-# 4. Formulario principal
+def obtener_bandera(pais):
+    return f"{banderas.get(pais, '🏳️')} {pais}"
+
+# --- 4. CONEXIÓN A TU GOOGLE SHEETS (PANEL DE CONTROL) ---
+# Usamos tu enlace y lo convertimos a formato de lectura de datos
+sheet_url = "https://docs.google.com/spreadsheets/d/1I7gXA3LsVZ0tmLziT8H3xM0lD_BlvFgpGd4E0tSgrYQ/export?format=csv"
+
+@st.cache_data(ttl=60) # Actualiza los partidos nuevos cada minuto
+def cargar_partidos():
+    try:
+        df = pd.read_csv(sheet_url)
+        df.columns = df.columns.str.strip() # Limpia espacios en blanco
+        return df
+    except Exception as e:
+        return None
+
+df_partidos = cargar_partidos()
+
+# --- 5. INTERFAZ DEL FORMULARIO ---
 with st.form("registro_quiniela"):
     st.markdown("### 📝 Datos del Colaborador")
-    nombre = st.text_input("Nombre y Apellido:", placeholder="Ej. Juan Pérez")
+    # Colocamos un ejemplo corporativo en el cajón de texto
+    nombre = st.text_input("Nombre y Apellido:", placeholder="Ej. Alejandro Saravia")
     departamento = st.selectbox("Departamento / Área:", ["Operaciones", "Ventas", "Administración", "Taller de Blindaje", "Dirección", "Otro"])
     
     st.markdown("---")
     st.markdown("### ⚽ Tus Pronósticos")
-    st.caption("Ingresa los goles para cada equipo.")
     
-    # Diccionario para guardar lo que escriba el usuario
     resultados_usuario = {}
     
-    for p in partidos:
-        st.markdown(f"**Partido {p['id']}: {p['local']} vs {p['visitante']}**")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            goles_l = st.number_input(f"{p['local']}", min_value=0, max_value=15, step=1, key=f"l_{p['id']}")
-        with col2:
-            st.markdown("<h3 style='text-align: center; color: gray;'>VS</h3>", unsafe_allow_html=True)
-        with col3:
-            goles_v = st.number_input(f"{p['visitante']}", min_value=0, max_value=15, step=1, key=f"v_{p['id']}")
+    # Verificamos que la hoja de Google Sheets tenga información
+    if df_partidos is not None and not df_partidos.empty:
+        if set(['ID', 'Local', 'Visitante', 'Fase']).issubset(df_partidos.columns):
             
-        # Guardamos el pronóstico temporalmente
-        resultados_usuario[f"P{p['id']}_{p['local']}"] = goles_l
-        resultados_usuario[f"P{p['id']}_{p['visitante']}"] = goles_v
-        
-        st.markdown("<hr style='margin: 0.5em 0px; border-top: 1px solid #333;'>", unsafe_allow_html=True)
+            for index, row in df_partidos.iterrows():
+                p_id = row['ID']
+                local = str(row['Local']).strip()
+                visitante = str(row['Visitante']).strip()
+                fase = str(row['Fase']).strip()
+                
+                st.markdown(f"**Partido {p_id} | Fase: {fase}**")
+                col1, col2, col3 = st.columns([3, 1, 3])
+                
+                with col1:
+                    st.markdown(f"<div style='text-align: right; font-size: 1.1em;'>{obtener_bandera(local)}</div>", unsafe_allow_html=True)
+                    goles_l = st.number_input("Goles L.", min_value=0, max_value=15, step=1, key=f"l_{p_id}", label_visibility="collapsed")
+                    
+                with col2:
+                    st.markdown("<h3 style='text-align: center; color: gray; margin-top: -10px;'>VS</h3>", unsafe_allow_html=True)
+                    
+                with col3:
+                    st.markdown(f"<div style='text-align: left; font-size: 1.1em;'>{obtener_bandera(visitante)}</div>", unsafe_allow_html=True)
+                    goles_v = st.number_input("Goles V.", min_value=0, max_value=15, step=1, key=f"v_{p_id}", label_visibility="collapsed")
+                    
+                resultados_usuario[f"P{p_id}_{local}"] = goles_l
+                resultados_usuario[f"P{p_id}_{visitante}"] = goles_v
+                st.markdown("<hr style='margin: 0.5em 0px; border-top: 1px solid #333;'>", unsafe_allow_html=True)
+        else:
+            st.error("⚠️ Tu Google Sheets no tiene los títulos correctos. Asegúrate de poner: ID, Local, Visitante, Fase en la primera fila.")
+    else:
+        st.info("Cargando partidos... (Si no aparecen, asegúrate de haberlos escrito en tu Google Sheets).")
 
     enviar = st.form_submit_button("Guardar Mis Pronósticos 🏆")
     
-    # 5. Lógica al presionar el botón
+    # --- 6. GUARDAR RESULTADOS ---
     if enviar:
         if nombre.strip() == "":
             st.error("❌ Por favor, escribe tu nombre en la parte de arriba.")
+        elif df_partidos is None or df_partidos.empty:
+             st.error("❌ No hay partidos para guardar. Avisa a administración.")
         else:
-            # Crear un registro con la fecha, nombre y los pronósticos
             registro = {
                 "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "Nombre": nombre,
                 "Departamento": departamento
             }
-            # Unimos los datos personales con los pronósticos
             registro.update(resultados_usuario)
             
-            # Convertimos a formato de tabla (Pandas DataFrame)
             df_nuevo = pd.DataFrame([registro])
-            
-            # Archivo donde se guardará todo
             archivo_csv = "resultados_quiniela.csv"
             
-            # Si el archivo ya existe, lo añadimos; si no, lo creamos
             if os.path.exists(archivo_csv):
                 df_nuevo.to_csv(archivo_csv, mode='a', header=False, index=False)
             else:
                 df_nuevo.to_csv(archivo_csv, mode='w', header=True, index=False)
                 
-            st.success(f"¡Excelente {nombre}! Tus pronósticos fueron guardados con éxito. ¡Mucha suerte!")
-            st.balloons() # ¡Un pequeño efecto de celebración en la pantalla!
+            st.success(f"¡Excelente {nombre}! Tus pronósticos fueron guardados en el sistema de Blindamos. ¡Mucha suerte!")
+            st.balloons()
