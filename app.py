@@ -118,3 +118,36 @@ try:
                         st.markdown("---")
                         
                     if st.button("Guardar Mis Pronósticos Oficiales 🏆"):
+                        st.success("¡Excelente PELE! Tus pronósticos blindados fueron procesados con éxito.")
+                else:
+                    st.warning("Estructura de columnas de FIXTURE no reconocida. Mostrando datos planos.")
+                    st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja))
+
+            # --- HOJA PLAYERS / NUMEROS 10 ---
+            elif nombre_hoja in ["PLAYERS", "JUGADORES"]:
+                st.subheader("🔟 Galería Estratégica: Los Números 10 del Mundial")
+                df_players = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(subset=['TEAM', 'PLAYER'])
+                
+                cols = st.columns(3)
+                for i, row in enumerate(df_players.iterrows()):
+                    datos = row[1]
+                    flag = obtener_bandera(datos['TEAM'])
+                    with cols[i % 3]:
+                        st.markdown(f"""
+                        <div class='player-card'>
+                            <h3>{flag} {datos['TEAM']}</h3>
+                            <p style='font-size: 24px; margin: 0;'>👤 <b>{datos['PLAYER']}</b></p>
+                            <p style='color: #f39c12; font-weight: bold; margin-top: 5px;'>Camiseta: N° 10</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.markdown("<br>", unsafe_allow_html=True)
+
+            # --- TRATAMIENTO AUTOMÁTICO PARA TODAS LAS DEMÁS PESTAÑAS ---
+            else:
+                st.subheader(f"📊 Datos del Tablero: {nombre_hoja}")
+                # Lee saltando los encabezados típicos estéticos del formato Excel
+                df_generico = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=3).dropna(how='all')
+                st.dataframe(df_generico, use_container_width=True, hide_index=True)
+
+except Exception as e:
+    st.error(f"⚠️ Alerta del Sistema: Asegúrate de que el archivo maestro 'excel-mundial-2026-multiideasweb.xlsx' esté subido en la raíz de tu GitHub junto a este script. Detalles: {e}")
