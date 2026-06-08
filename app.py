@@ -7,7 +7,6 @@ import random
 # ==========================================
 st.set_page_config(page_title="Quiniela Blindamos 2026", page_icon="🛡️", layout="wide")
 
-# Estilos premium negro y dorado Blindamos
 st.markdown("""
     <style>
     .stApp { background-color: #1a1a1a; color: #ffffff; }
@@ -21,7 +20,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. DICCIONARIO MAESTRO DE BANDERAS (i18n robusto)
+# 2. DICCIONARIO MAESTRO DE BANDERAS
 # ==========================================
 BANDERAS = {
     "USA": "🇺🇸", "ESTADOS UNIDOS": "🇺🇸", "UNITED STATES": "🇺🇸",
@@ -40,7 +39,7 @@ def obtener_bandera(pais):
     return BANDERAS.get(nombre_limpio, "🏳️")
 
 # ==========================================
-# 3. BASE DE DATOS DE TRIVIA "¿SABÍAS QUÉ?"
+# 3. BASE DE DATOS DE TRIVIA
 # ==========================================
 TRIVIAS = [
     "¡El Mundial 2026 será el primero en la historia con 48 equipos participantes en lugar de 32!",
@@ -51,14 +50,14 @@ TRIVIAS = [
 ]
 
 # ==========================================
-# 4. CARGA CENTRAL DE DATOS (EXCEL)
+# 4. CARGA CENTRAL DE DATOS (CORREGIDO A CACHE_RESOURCE)
 # ==========================================
-@st.cache_data
+@st.cache_resource
 def cargar_base_datos():
     archivo_maestro = "excel-mundial-2026-multiideasweb.xlsx"
     return pd.ExcelFile(archivo_maestro)
 
-# Sidebar corporativo permanente
+# Sidebar corporativo
 with st.sidebar:
     try:
         st.image("logo.png", use_container_width=True)
@@ -71,12 +70,11 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("⚡ *Modo Dios Configurado por Wanda*")
 
-# Control de ejecución principal
+# Ejecución principal
 try:
     xls = cargar_base_datos()
     pestanas_excel = xls.sheet_names
     
-    # Generación de la barra de navegación superior exacta a las etiquetas del Excel
     tabs = st.tabs(pestanas_excel)
     
     for idx, nombre_hoja in enumerate(pestanas_excel):
@@ -84,18 +82,14 @@ try:
             
             # --- HOJA HOME ---
             if nombre_hoja == "HOME":
-                st.subheader("🏁 Bienvenido al Centro de Control de la Quiniela Mundialista")
-                st.markdown("""
-                ¡Todo listo para arrancar la competición interna en Blindamos! 
-                Este sistema lee en tiempo real la configuración completa de tu libro de análisis. Navega por las pestañas de arriba para evaluar clasificaciones, plantillas y registrar scores.
-                """)
+                st.subheader("🏁 Bienvenido al Centro de Control")
+                st.markdown("Navega por las pestañas de arriba para evaluar clasificaciones, plantillas y registrar scores.")
                 
-            # --- HOJA FIXTURE (Central Operativa de Marcadores) ---
+            # --- HOJA FIXTURE ---
             elif nombre_hoja == "FIXTURE":
                 st.subheader("⚽ Predicciones Oficiales del Torneo")
                 df_fix = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1)
                 
-                # Filtrar filas vacías para evitar errores de renderizado
                 if 'HOME TEAM' in df_fix.columns and 'AWAY TEAM' in df_fix.columns:
                     df_fix = df_fix.dropna(subset=['HOME TEAM', 'AWAY TEAM'])
                     
@@ -120,10 +114,9 @@ try:
                     if st.button("Guardar Mis Pronósticos Oficiales 🏆"):
                         st.success("¡Excelente PELE! Tus pronósticos blindados fueron procesados con éxito.")
                 else:
-                    st.warning("Estructura de columnas de FIXTURE no reconocida. Mostrando datos planos.")
                     st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja))
 
-            # --- HOJA PLAYERS / NUMEROS 10 ---
+            # --- HOJA PLAYERS ---
             elif nombre_hoja in ["PLAYERS", "JUGADORES"]:
                 st.subheader("🔟 Galería Estratégica: Los Números 10 del Mundial")
                 df_players = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(subset=['TEAM', 'PLAYER'])
@@ -137,17 +130,15 @@ try:
                         <div class='player-card'>
                             <h3>{flag} {datos['TEAM']}</h3>
                             <p style='font-size: 24px; margin: 0;'>👤 <b>{datos['PLAYER']}</b></p>
-                            <p style='color: #f39c12; font-weight: bold; margin-top: 5px;'>Camiseta: N° 10</p>
                         </div>
                         """, unsafe_allow_html=True)
                         st.markdown("<br>", unsafe_allow_html=True)
 
-            # --- TRATAMIENTO AUTOMÁTICO PARA TODAS LAS DEMÁS PESTAÑAS ---
+            # --- DEMÁS PESTAÑAS ---
             else:
                 st.subheader(f"📊 Datos del Tablero: {nombre_hoja}")
-                # Lee saltando los encabezados típicos estéticos del formato Excel
                 df_generico = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=3).dropna(how='all')
                 st.dataframe(df_generico, use_container_width=True, hide_index=True)
 
 except Exception as e:
-    st.error(f"⚠️ Alerta del Sistema: Asegúrate de que el archivo maestro 'excel-mundial-2026-multiideasweb.xlsx' esté subido en la raíz de tu GitHub junto a este script. Detalles: {e}")
+    st.error(f"⚠️ Alerta del Sistema: {e}")
