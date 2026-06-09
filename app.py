@@ -13,22 +13,25 @@ st.markdown("""
     <style>
     .stApp { background-color: #1a1a1a !important; color: #ffffff !important; }
     h1, h2, h3, h4 { color: #f39c12 !important; font-family: 'Helvetica Neue', sans-serif; }
-    [data-testid="stSidebar"] { background-color: #111111 !important; min-width: 300px !important; }
+    [data-testid="stSidebar"] { background-color: #111111 !important; display: block !important; }
     [data-testid="stSidebar"] * { color: #ffffff !important; }
     div[data-testid="stTextInput"] input { background-color: #222222 !important; color: #ffffff !important; border: 1px solid #444444 !important; }
-    /* ANIQUILACIÓN TOTAL DE ELEMENTOS EXTERNOS */
+    
+    /* ANIQUILACIÓN TOTAL DE ELEMENTOS DE STREAMLIT */
     #MainMenu, header, footer, .stDeployButton, [data-testid="stAppDeployButton"], 
     [data-testid="manage-app-button"], div[class*="viewerBadge"], div[class*="profileContainer"], 
     a.header-anchor, .st-emotion-cache-10trblm, [data-testid="stHeaderActionElements"], 
-    [data-testid="stElementToolbar"], img[alt="Streamlit"], [data-testid="stStatusWidget"] {display: none !important;}
+    [data-testid="stElementToolbar"], [data-testid="stStatusWidget"] {display: none !important;}
+    
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { background-color: #2b2b2b; color: white; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; border: 1px solid #333; border-bottom: none; }
+    .stTabs [data-baseweb="tab"] { background-color: #2b2b2b; color: white; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; border: 1px solid #333; }
     .stTabs [aria-selected="true"] { background-color: #f39c12 !important; color: black !important; }
+    .player-card { background-color: #222222; border: 1px solid #333333; padding: 15px; border-radius: 8px; text-align: center; color: #ffffff; }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. FUNCIONES BASE
+# 2. FUNCIONES Y ESTADO
 # ==========================================
 ARCHIVO_DB = "db_blindamos.csv"
 
@@ -38,8 +41,8 @@ def cargar_db():
 
 if "logged_in" not in st.session_state: st.session_state.update({"logged_in": False, "usuario": "", "preds": {}})
 
-def es_equipo_tbd(nombre):
-    n = str(nombre).strip().upper()
+def es_equipo_tbd(n):
+    n = str(n).strip().upper()
     return any(p in n for p in ["TBD", "TDB", "WINNER", "GANADOR"]) or (len(n) <= 3 and any(c.isdigit() for c in n))
 
 @st.cache_resource
@@ -48,7 +51,7 @@ def cargar_excel():
     return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
 
 # ==========================================
-# 3. SIDEBAR (CORREGIDO PARA IPHONE)
+# 3. SIDEBAR (SIEMPRE VISIBLE)
 # ==========================================
 with st.sidebar:
     st.markdown("### 🛡️ TALLERES BLINDAMOS")
@@ -66,7 +69,7 @@ with st.sidebar:
                 db = pd.concat([db, pd.DataFrame([{"Jugador": usuario_input, "PIN": pin_input, "Puntos": 0, "Predicciones": "{}"}])], ignore_index=True)
                 db.to_csv(ARCHIVO_DB, index=False)
                 st.session_state.update({"logged_in": True, "usuario": usuario_input, "preds": {}})
-        else: st.error("Datos incompletos.")
+        else: st.error("Datos incorrectos.")
     if st.session_state["logged_in"]: st.info(f"✅ Conectado: **{st.session_state['usuario']}**")
 
 # ==========================================
@@ -81,8 +84,11 @@ try:
     for idx, nombre_hoja in enumerate(tabs_finales):
         with tabs[idx]:
             if nombre_hoja == "🏠 INICIO":
-                st.title("🛡️ Centro de Control")
-                st.markdown("Bienvenido al sistema élite. Usa el menú lateral para registrarte.")
+                st.markdown("## 🛡️ Centro de Control Quiniela 2026")
+                st.markdown("---")
+                st.markdown("### Bienvenido al sistema élite de pronósticos.")
+                st.markdown("**Instrucciones:**\n1. Ingresa tu Nombre y PIN en el menú lateral 👈.\n2. Ve a FIXTURE para cargar predicciones.\n3. Guarda antes de salir. Los partidos se bloquean al iniciar.")
+                st.info("⚡ Alta Seguridad. Cifrado activo.")
             elif nombre_hoja == "🏆 RANKING OFICIAL":
                 db = cargar_db()
                 if not db.empty: st.dataframe(db[["Jugador", "Puntos"]].sort_values(by="Puntos", ascending=False), use_container_width=True, hide_index=True)
@@ -99,4 +105,4 @@ try:
                 st.dataframe(dg.dropna(how='all'), use_container_width=True, hide_index=True)
             else:
                 st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(how='all'), use_container_width=True, hide_index=True)
-except Exception as e: st.error("Sistema listo.")
+except: st.error("Cargando base de datos...")
