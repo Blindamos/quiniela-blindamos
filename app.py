@@ -55,10 +55,10 @@ with st.sidebar:
     try:
         st.image("logo.png", use_container_width=True)
     except:
-        st.markdown("### 🛡️ TALLERES BLINDAMOS")
+        st.markdown("### 🛡️ TALLERES BLINDAMOS EN EL MUNDIAL 2026")
     
     st.markdown("---")
-    usuario_actual = st.text_input("👤 Tu Nombre / Apellido(Ej: Alvaro Giménez)", placeholder="Ingresa tu nombre para jugar")
+    usuario_actual = st.text_input("👤 Tu Nombre (Ej: Alvaro Giménez)", placeholder="Ingresa tu nombre para jugar")
     st.markdown("---")
     
     # 🔥 Trivias recuperadas
