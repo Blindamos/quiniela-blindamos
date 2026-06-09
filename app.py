@@ -6,34 +6,34 @@ import json
 from datetime import datetime, timedelta
 
 # ==========================================
-# 1. CONFIGURACIÓN MODO DIOS & PANTALLA BLANCA
+# 1. CONFIGURACIÓN MODO DIOS & DARK MODE
 # ==========================================
 st.set_page_config(page_title="Quiniela Blindamos 2026", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
-    /* 1. Fondo Blanco y Textos Corporativos Main */
-    .stApp { background-color: #ffffff !important; color: #333333 !important; }
-    h1, h2, h3, h4 { color: #003366 !important; font-family: 'Helvetica Neue', sans-serif; }
+    /* 1. Fondo Oscuro Premium Blindamos */
+    .stApp { background-color: #1a1a1a !important; color: #ffffff !important; }
+    h1, h2, h3, h4 { color: #f39c12 !important; font-family: 'Helvetica Neue', sans-serif; }
     
-    /* 2. Forzar Modo Claro en Menú Lateral y Cajas de Texto */
-    [data-testid="stSidebar"] { background-color: #f0f2f6 !important; }
-    [data-testid="stSidebar"] * { color: #333333 !important; }
-    div[data-testid="stTextInput"] input { background-color: #ffffff !important; color: #333333 !important; border: 1px solid #cccccc !important; }
+    /* 2. Menú Lateral Oscuro */
+    [data-testid="stSidebar"] { background-color: #111111 !important; }
+    [data-testid="stSidebar"] * { color: #ffffff !important; }
+    div[data-testid="stTextInput"] input { background-color: #222222 !important; color: #ffffff !important; border: 1px solid #444444 !important; }
     
     /* 3. Ocultar Menú superior y Footer */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* 4. ANIQUILAR BOTÓN "MANAGE APP" Y DEPLOY (CÓDIGO AGRESIVO) */
+    /* 4. ANIQUILAR BOTONES DE STREAMLIT */
     .stDeployButton {display: none !important;}
     [data-testid="stAppDeployButton"] {display: none !important;}
     [data-testid="manage-app-button"] {display: none !important;}
     div[class*="viewerBadge"] {display: none !important;}
     div[class*="profileContainer"] {display: none !important;}
     
-    /* 5. Aniquilar los símbolos táctiles al lado de los títulos y tablas */
+    /* 5. Aniquilar símbolos táctiles */
     a.header-anchor {display: none !important;}
     .st-emotion-cache-10trblm {display: none !important;}
     [data-testid="stHeaderActionElements"] {display: none !important;}
@@ -41,13 +41,12 @@ st.markdown("""
     
     /* 6. Estilos de Pestañas */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { background-color: #f0f2f6; color: #333; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; border: 1px solid #ddd; border-bottom: none; }
-    .stTabs [aria-selected="true"] { background-color: #f39c12 !important; color: white !important; }
+    .stTabs [data-baseweb="tab"] { background-color: #2b2b2b; color: white; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; border: 1px solid #333; border-bottom: none; }
+    .stTabs [aria-selected="true"] { background-color: #f39c12 !important; color: black !important; }
     
-    /* 7. Tabla Personalizada para HOME (Adiós fondo negro) */
-    table.custom-table { width: 100%; border-collapse: collapse; color: #333333; background-color: #ffffff; font-size: 16px; }
-    table.custom-table td, table.custom-table th { padding: 12px; border-bottom: 1px solid #eeeeee; text-align: left; }
-    table.custom-table tr:hover { background-color: #f9f9f9; }
+    /* Tarjetas personalizadas */
+    .card-sabias { background-color: #262626; border-left: 5px solid #f39c12; padding: 15px; border-radius: 4px; margin-bottom: 15px; color: #ffffff; }
+    .player-card { background-color: #222222; border: 1px solid #333333; padding: 15px; border-radius: 8px; text-align: center; color: #ffffff; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -141,33 +140,37 @@ with st.sidebar:
 # ==========================================
 try:
     xls = cargar_excel()
-    pestanas_ocultas = ["SETTINGS", "PRINT", "POOL", "PREDICTOR"]
-    pestanas_visibles = [h for h in xls.sheet_names if h not in pestanas_ocultas]
-    pestanas_visibles.insert(1, "🏆 RANKING OFICIAL")
+    # 🔥 MODO DIOS: Bloqueamos las pestañas inútiles del Excel
+    pestanas_ocultas = ["SETTINGS", "PRINT", "POOL", "PREDICTOR", "SCORES", "HOME"]
+    pestanas_excel = [h for h in xls.sheet_names if h not in pestanas_ocultas]
     
-    tabs = st.tabs(pestanas_visibles)
+    # Creamos nuestras propias pestañas maestras
+    tabs_finales = ["🏠 INICIO", "🏆 RANKING OFICIAL"] + pestanas_excel
     
-    for idx, nombre_hoja in enumerate(pestanas_visibles):
+    tabs = st.tabs(tabs_finales)
+    
+    for idx, nombre_hoja in enumerate(tabs_finales):
         with tabs[idx]:
             
-            # --- HOME (LIMPIEZA EXTREMA) ---
-            if nombre_hoja == "HOME":
-                # Leemos los datos sin considerar encabezados para evitar los "Unnamed"
-                df_home = pd.read_excel(xls, sheet_name=nombre_hoja, header=None, skiprows=1).fillna("")
-                
-                # Eliminamos filas y columnas que estén 100% vacías
-                df_home = df_home.dropna(how='all', axis=0).dropna(how='all', axis=1)
-                
-                # Convertimos la matriz a código HTML puro sin índices ni cabeceras
-                html_table = df_home.to_html(index=False, header=False, border=0, classes="custom-table")
-                
-                # Lo inyectamos en la pantalla. Así obedecerá al fondo blanco y letra negra.
-                st.markdown("### 🏁 Centro de Control")
-                st.markdown(html_table, unsafe_allow_html=True)
+            # --- PORTADA NATIVA STREAMLIT ---
+            if nombre_hoja == "🏠 INICIO":
+                st.title("🛡️ Centro de Control Quiniela 2026")
+                st.markdown("---")
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    st.markdown("### Bienvenido al sistema élite de pronósticos.")
+                    st.markdown("""
+                    **Instrucciones de Operación:**
+                    1. Ve al menú lateral 👈 e ingresa tu Nombre y un PIN de 4 dígitos.
+                    2. Dirígete a la pestaña **FIXTURE** para cargar tus predicciones.
+                    3. Recuerda guardar antes de salir. Los partidos se bloquean automáticamente a la hora de su inicio.
+                    """)
+                with col2:
+                    st.info("⚡ Desarrollado bajo arquitectura de Alta Seguridad. Cifrado activo.")
                 
             # --- RANKING ---
             elif nombre_hoja == "🏆 RANKING OFICIAL":
-                st.subheader("🏆 Clasificación General Blindamos")
+                st.subheader("🏆 Clasificación General")
                 db = cargar_db()
                 if not db.empty:
                     df_ranking = db[["Jugador", "Puntos"]].sort_values(by="Puntos", ascending=False)
@@ -206,7 +209,7 @@ try:
                             
                         bloqueo_total = partido_bloqueado or candado_tiempo
                         
-                        color_t = "#333333"
+                        color_t = "#ffffff"
                         texto_alerta = ""
                         if candado_tiempo:
                             texto_alerta = "<br><span style='color:#ff4b4b; font-size:12px;'>🔒 TIEMPO AGOTADO</span>"
@@ -289,7 +292,7 @@ try:
                 cols = st.columns(3)
                 for i, row in enumerate(df_players.iterrows()):
                     with cols[i % 3]:
-                        st.markdown(f"<div style='background-color:#f9f9f9; border: 1px solid #ddd; padding:15px; border-radius:8px; text-align:center; color:#333333;'><h3>{obtener_bandera(row[1]['TEAM'])} {row[1]['TEAM']}</h3><p style='font-size: 24px; margin: 0;'>👤 <b>{row[1]['PLAYER']}</b></p></div><br>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='player-card'><h3>{obtener_bandera(row[1]['TEAM'])} {row[1]['TEAM']}</h3><p style='font-size: 24px; margin: 0;'>👤 <b>{row[1]['PLAYER']}</b></p></div><br>", unsafe_allow_html=True)
 
             # --- OTRAS PESTAÑAS ---
             else:
