@@ -2,14 +2,13 @@ import streamlit as st
 import pandas as pd
 import os
 import json
-from datetime import datetime, date
+from datetime import date
 
 # ==========================================
-# 1. CONFIGURACIÓN MODO EXPERTO (SIN HACKS)
+# CONFIGURACIÓN MODO EXPERTO
 # ==========================================
 st.set_page_config(layout="wide", page_title="Quiniela Blindamos 2026", page_icon="🛡️")
 
-# CSS Solo para colores. NO OCULTAMOS LA CABECERA PARA QUE EL IPHONE FUNCIONE.
 st.markdown("""
     <style>
     .stApp { background-color: #1a1a1a !important; color: #ffffff !important; }
@@ -24,7 +23,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. FUNCIONES BASE Y BANDERAS
+# FUNCIONES BASE Y BANDERAS
 # ==========================================
 ARCHIVO_DB = "db_blindamos.csv"
 
@@ -48,10 +47,14 @@ def cargar_excel(): return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
 if "logged_in" not in st.session_state: st.session_state.update({"logged_in": False, "usuario": "", "preds": {}})
 
 # ==========================================
-# 3. SIDEBAR (AHORA SÍ FUNCIONA EN IPHONE)
+# SIDEBAR (LOGO Y LOGIN MÓVIL)
 # ==========================================
 with st.sidebar:
-    st.markdown("### 🛡️ TALLERES BLINDAMOS")
+    try:
+        st.image("logo.png", use_container_width=True)
+    except:
+        st.markdown("### 🛡️ TALLERES BLINDAMOS")
+        
     st.subheader("Login / Registro")
     usuario_input = st.text_input("👤 Tu Nombre").strip().upper()
     pin_input = st.text_input("🔑 PIN (4+ dígitos)", type="password").strip()
@@ -71,12 +74,9 @@ with st.sidebar:
                 st.session_state.update({"logged_in": True, "usuario": usuario_input, "preds": {}})
                 st.success(f"✅ Registrado como {usuario_input}")
         else: st.error("❌ Datos incompletos.")
-    
-    if st.session_state["logged_in"]: 
-        st.info(f"Conectado: {st.session_state['usuario']}")
 
 # ==========================================
-# 4. MOTOR PRINCIPAL
+# MOTOR PRINCIPAL
 # ==========================================
 try:
     xls = cargar_excel()
@@ -87,38 +87,27 @@ try:
     
     for idx, nombre_hoja in enumerate(tabs_finales):
         with tabs[idx]:
-            # --- PORTADA CON LOGO E INSTRUCCIONES ---
             if nombre_hoja == "🏠 INICIO":
                 st.markdown("## 🛡️ Centro de Control Quiniela 2026")
                 st.markdown("---")
                 st.markdown("### Bienvenido al sistema élite de pronósticos.")
-                st.markdown("""
-                **Instrucciones:**
-                1. Toca la flecha **>** (arriba a la izquierda) si estás en tu móvil.
-                2. Ingresa tu Nombre y PIN en el menú lateral.
-                3. Ve a **FIXTURE** para cargar predicciones.
-                4. Guarda antes de salir. Los partidos se bloquean al iniciar.
-                """)
+                st.markdown("**Instrucciones:**\n1. Toca la flecha **>** (arriba a la izquierda) en tu móvil para abrir el menú.\n2. Ingresa tu Nombre y PIN.\n3. Ve a **FIXTURE** para cargar predicciones.\n4. Guarda antes de salir. Los partidos se bloquean al iniciar.")
                 st.info("⚡ Alta Seguridad. Cifrado activo.")
                 
-            # --- RANKING ---
             elif nombre_hoja == "🏆 RANKING OFICIAL":
                 db = cargar_db()
                 if not db.empty:
                     st.dataframe(db[["Jugador", "Puntos"]].sort_values(by="Puntos", ascending=False), use_container_width=True, hide_index=True)
                 else: st.warning("Aún no hay jugadores registrados.")
             
-            # --- FIXTURE Y PREDICCIONES ---
             elif str(nombre_hoja).strip().upper() == "FIXTURE":
                 df_fix = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(subset=['HOME TEAM', 'AWAY TEAM'])
                 with st.form("f"):
                     st.write("---")
-                    # Lógica de fecha: Bloquear partidos después del 26 de Junio
                     bloqueo_date = date(2026, 6, 27)
                     
                     for i, r in df_fix.iterrows():
                         if es_equipo_tbd(r['HOME TEAM']) or es_equipo_tbd(r['AWAY TEAM']): continue
-                        
                         try: match_date = pd.to_datetime(r['DATE']).date()
                         except: match_date = None
                         
@@ -154,7 +143,6 @@ try:
                             st.success("✅ Guardado.")
                         else: st.error("❌ Loguéate primero.")
             
-            # --- STANDINGS CON BLOQUEO ---
             elif "GROUP" in str(nombre_hoja).upper() or str(nombre_hoja).upper() in standings_bloqueados:
                 st.subheader(f"📊 {nombre_hoja}")
                 if str(nombre_hoja).upper() in standings_bloqueados:
@@ -165,4 +153,4 @@ try:
                 st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja).dropna(how='all'), use_container_width=True, hide_index=True)
 
 except Exception as e:
-    st.error("Error cargando base de datos. Asegúrate de subir el Excel correcto.")
+    st.error(f"Asegúrate de tener el archivo Excel en la misma carpeta.")
