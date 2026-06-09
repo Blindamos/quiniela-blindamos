@@ -12,27 +12,42 @@ st.set_page_config(page_title="Quiniela Blindamos 2026", page_icon="🛡️", la
 
 st.markdown("""
     <style>
-    /* 1. Fondo Blanco y Textos Corporativos */
-    .stApp { background-color: #ffffff; color: #333333; }
+    /* 1. Fondo Blanco y Textos Corporativos Main */
+    .stApp { background-color: #ffffff !important; color: #333333 !important; }
     h1, h2, h3, h4 { color: #003366 !important; font-family: 'Helvetica Neue', sans-serif; }
     
-    /* 2. Ocultar el Gato de GitHub, Menú superior y Footer */
+    /* 2. Forzar Modo Claro en Menú Lateral y Cajas de Texto */
+    [data-testid="stSidebar"] { background-color: #f0f2f6 !important; }
+    [data-testid="stSidebar"] * { color: #333333 !important; }
+    div[data-testid="stTextInput"] input { background-color: #ffffff !important; color: #333333 !important; border: 1px solid #cccccc !important; }
+    
+    /* 3. Ocultar Menú superior y Footer */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
-    .stDeployButton {display: none !important;}
     
-    /* 3. Aniquilar los símbolos táctiles al lado de los títulos y tablas */
+    /* 4. ANIQUILAR BOTÓN "MANAGE APP" Y DEPLOY (CÓDIGO AGRESIVO) */
+    .stDeployButton {display: none !important;}
+    [data-testid="stAppDeployButton"] {display: none !important;}
+    [data-testid="manage-app-button"] {display: none !important;}
+    div[class*="viewerBadge"] {display: none !important;}
+    div[class*="profileContainer"] {display: none !important;}
+    
+    /* 5. Aniquilar los símbolos táctiles al lado de los títulos y tablas */
     a.header-anchor {display: none !important;}
     .st-emotion-cache-10trblm {display: none !important;}
     [data-testid="stHeaderActionElements"] {display: none !important;}
     [data-testid="stElementToolbar"] {display: none !important;}
     
-    /* 4. Estilos de Pestañas y Cajas */
+    /* 6. Estilos de Pestañas */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] { background-color: #f0f2f6; color: #333; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; border: 1px solid #ddd; border-bottom: none; }
     .stTabs [aria-selected="true"] { background-color: #f39c12 !important; color: white !important; }
-    .card-sabias { background-color: #f9f9f9; border-left: 5px solid #f39c12; padding: 15px; border-radius: 4px; margin-bottom: 15px; color: #333; }
+    
+    /* 7. Tabla Personalizada para HOME (Adiós fondo negro) */
+    table.custom-table { width: 100%; border-collapse: collapse; color: #333333; background-color: #ffffff; font-size: 16px; }
+    table.custom-table td, table.custom-table th { padding: 12px; border-bottom: 1px solid #eeeeee; text-align: left; }
+    table.custom-table tr:hover { background-color: #f9f9f9; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -135,10 +150,20 @@ try:
     for idx, nombre_hoja in enumerate(pestanas_visibles):
         with tabs[idx]:
             
-            # --- HOME (VISTA ORIGINAL DEL EXCEL) ---
+            # --- HOME (LIMPIEZA EXTREMA) ---
             if nombre_hoja == "HOME":
-                df_home = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(how='all', axis=0).dropna(how='all', axis=1)
-                st.dataframe(df_home, use_container_width=True, hide_index=True)
+                # Leemos los datos sin considerar encabezados para evitar los "Unnamed"
+                df_home = pd.read_excel(xls, sheet_name=nombre_hoja, header=None, skiprows=1).fillna("")
+                
+                # Eliminamos filas y columnas que estén 100% vacías
+                df_home = df_home.dropna(how='all', axis=0).dropna(how='all', axis=1)
+                
+                # Convertimos la matriz a código HTML puro sin índices ni cabeceras
+                html_table = df_home.to_html(index=False, header=False, border=0, classes="custom-table")
+                
+                # Lo inyectamos en la pantalla. Así obedecerá al fondo blanco y letra negra.
+                st.markdown("### 🏁 Centro de Control")
+                st.markdown(html_table, unsafe_allow_html=True)
                 
             # --- RANKING ---
             elif nombre_hoja == "🏆 RANKING OFICIAL":
@@ -231,7 +256,7 @@ try:
                         else:
                             st.error("⚠️ Identifícate primero en el menú lateral.")
 
-            # --- REDISEÑO VERTICAL DE LOS GRUPOS ---
+            # --- GRUPOS ---
             elif "GROUP" in nombre_hoja.upper() or "GRUPO" in nombre_hoja.upper():
                 st.subheader("📊 Fase de Grupos Oficial")
                 df_groups_raw = pd.read_excel(xls, sheet_name=nombre_hoja, header=None)
