@@ -168,6 +168,6 @@ try:
                     cols[i % 3].markdown(f"<div class='player-card'><h3>{obtener_bandera(r['TEAM'])} {r['TEAM']}</h3><p style='font-size: 24px; margin: 0;'>👤 <b>{r['PLAYER']}</b></p></div><br>", unsafe_allow_html=True)
             else:
                 st.subheader(f"📊 {nombre_hoja}")
-                st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=3).dropna(how='all'), use_container_width=True, hide_index=True)
+                st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(how='all'), use_container_width=True, hide_index=True)
 
 except Exception as e: st.error(f"⚠️ Error Maestro: {e}")
