@@ -53,7 +53,7 @@ with st.sidebar:
     try:
         st.image("logo.png", use_container_width=True)
     except:
-        st.markdown("### 🛡️ TALLERES BLINDAMOS")
+        st.markdown("### TALLERES BLINDAMOS")
         
     st.subheader("Login / Registro")
     usuario_input = st.text_input("👤 Tu Nombre").strip().upper()
@@ -88,7 +88,7 @@ try:
     for idx, nombre_hoja in enumerate(tabs_finales):
         with tabs[idx]:
             if nombre_hoja == "🏠 INICIO":
-                st.markdown("## 🛡️ Centro de Control Quiniela 2026")
+                st.markdown("## 🛡️ Centro de Control Blindamos")
                 st.markdown("---")
                 st.markdown("### Bienvenido al sistema élite de pronósticos.")
                 st.markdown("**Instrucciones:**\n1. Toca la flecha **>** (arriba a la izquierda) en tu móvil para abrir el menú.\n2. Ingresa tu Nombre y PIN.\n3. Ve a **FIXTURE** para cargar predicciones.\n4. Guarda antes de salir. Los partidos se bloquean al iniciar.")
