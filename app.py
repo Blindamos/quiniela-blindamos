@@ -6,21 +6,33 @@ import json
 from datetime import datetime, timedelta
 
 # ==========================================
-# 1. CONFIGURACIÓN MODO DIOS & WHITE-LABELING
+# 1. CONFIGURACIÓN MODO DIOS & PANTALLA BLANCA
 # ==========================================
 st.set_page_config(page_title="Quiniela Blindamos 2026", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
+    /* 1. Fondo Blanco y Textos Corporativos */
+    .stApp { background-color: #ffffff; color: #333333; }
+    h1, h2, h3, h4 { color: #003366 !important; font-family: 'Helvetica Neue', sans-serif; }
+    
+    /* 2. Ocultar el Gato de GitHub, Menú superior y Footer */
     #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
     header {visibility: hidden;}
-    .stApp { background-color: #1a1a1a; color: #ffffff; }
-    h1, h2, h3, h4 { color: #f39c12 !important; font-family: 'Helvetica Neue', sans-serif; }
+    footer {visibility: hidden;}
+    .stDeployButton {display: none !important;}
+    
+    /* 3. Aniquilar los símbolos táctiles al lado de los títulos y tablas */
+    a.header-anchor {display: none !important;}
+    .st-emotion-cache-10trblm {display: none !important;}
+    [data-testid="stHeaderActionElements"] {display: none !important;}
+    [data-testid="stElementToolbar"] {display: none !important;}
+    
+    /* 4. Estilos de Pestañas y Cajas */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { background-color: #2b2b2b; color: white; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; }
-    .stTabs [aria-selected="true"] { background-color: #f39c12 !important; color: black !important; }
-    .card-sabias { background-color: #262626; border-left: 5px solid #f39c12; padding: 15px; border-radius: 4px; margin-bottom: 15px; }
+    .stTabs [data-baseweb="tab"] { background-color: #f0f2f6; color: #333; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; border: 1px solid #ddd; border-bottom: none; }
+    .stTabs [aria-selected="true"] { background-color: #f39c12 !important; color: white !important; }
+    .card-sabias { background-color: #f9f9f9; border-left: 5px solid #f39c12; padding: 15px; border-radius: 4px; margin-bottom: 15px; color: #333; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -64,6 +76,8 @@ def es_equipo_tbd(nombre):
 
 @st.cache_resource
 def cargar_excel():
+    import warnings
+    warnings.filterwarnings('ignore')
     return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
 
 # ==========================================
@@ -121,8 +135,13 @@ try:
     for idx, nombre_hoja in enumerate(pestanas_visibles):
         with tabs[idx]:
             
+            # --- HOME (VISTA ORIGINAL DEL EXCEL) ---
+            if nombre_hoja == "HOME":
+                df_home = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(how='all', axis=0).dropna(how='all', axis=1)
+                st.dataframe(df_home, use_container_width=True, hide_index=True)
+                
             # --- RANKING ---
-            if nombre_hoja == "🏆 RANKING OFICIAL":
+            elif nombre_hoja == "🏆 RANKING OFICIAL":
                 st.subheader("🏆 Clasificación General Blindamos")
                 db = cargar_db()
                 if not db.empty:
@@ -131,15 +150,13 @@ try:
                 else:
                     st.info("Aún no hay jugadores registrados.")
 
-            # --- FIXTURE (BLOQUEO TBD + CANDADO DE TIEMPO) ---
+            # --- FIXTURE ---
             elif nombre_hoja == "FIXTURE":
                 st.subheader("⚽ Central de Predicciones")
                 if not st.session_state["logged_in"]:
                     st.warning("⚠️ Debes Entrar/Registrarte en el menú lateral para habilitar tus pronósticos.")
                 
-                # Reloj maestro ajustado
                 hora_actual = datetime.utcnow() - timedelta(hours=4)
-                
                 df_fix = pd.read_excel(xls, sheet_name="FIXTURE", skiprows=1).dropna(subset=['HOME TEAM', 'AWAY TEAM'])
                 
                 with st.form("form_pronosticos"):
@@ -150,15 +167,12 @@ try:
                         partido_bloqueado = es_equipo_tbd(equipo_h) or es_equipo_tbd(equipo_a)
                         candado_tiempo = False
                         
-                        # Evaluación del Tiempo
                         try:
                             if pd.notna(row['DATE']) and pd.notna(row['TIME']):
                                 fecha_str = row['DATE'].strftime('%Y-%m-%d') if hasattr(row['DATE'], 'strftime') else str(row['DATE']).split(' ')[0]
                                 hora_str = str(row['TIME']).strip()
-                                # Limpieza por si hay segundos en la hora
                                 if len(hora_str.split(':')) == 3:
                                     hora_str = ":".join(hora_str.split(':')[:2])
-                                
                                 fecha_hora_partido = datetime.strptime(f"{fecha_str} {hora_str}", "%Y-%m-%d %H:%M")
                                 if hora_actual >= fecha_hora_partido:
                                     candado_tiempo = True
@@ -167,15 +181,14 @@ try:
                             
                         bloqueo_total = partido_bloqueado or candado_tiempo
                         
-                        # Diseño visual según el bloqueo
+                        color_t = "#333333"
                         texto_alerta = ""
-                        color_t = "#fff"
                         if candado_tiempo:
                             texto_alerta = "<br><span style='color:#ff4b4b; font-size:12px;'>🔒 TIEMPO AGOTADO</span>"
                             color_t = "#ff4b4b"
                         elif partido_bloqueado:
-                            texto_alerta = "<br><span style='color:#555; font-size:12px;'>⏳ POR DEFINIR</span>"
-                            color_t = "#555"
+                            texto_alerta = "<br><span style='color:#888888; font-size:12px;'>⏳ POR DEFINIR</span>"
+                            color_t = "#888888"
 
                         val_h = st.session_state["preds"].get(f"h_{index}", None if bloqueo_total else 0)
                         val_a = st.session_state["preds"].get(f"a_{index}", None if bloqueo_total else 0)
@@ -194,7 +207,6 @@ try:
                         if st.session_state["logged_in"]:
                             nuevas_preds = {}
                             for idx_f, row_f in df_fix.iterrows():
-                                # Verificamos candado de tiempo al guardar por seguridad extra
                                 candado_seguridad = False
                                 try:
                                     if pd.notna(row_f['DATE']) and pd.notna(row_f['TIME']):
@@ -208,7 +220,6 @@ try:
                                     nuevas_preds[f"h_{idx_f}"] = st.session_state[f"h_{idx_f}"]
                                     nuevas_preds[f"a_{idx_f}"] = st.session_state[f"a_{idx_f}"]
                             
-                            # Fusionar con los previos (para no borrar los bloqueados que ya habían guardado)
                             preds_finales = st.session_state["preds"].copy()
                             preds_finales.update(nuevas_preds)
                             
@@ -236,7 +247,6 @@ try:
                             df_g = df_g[1:]
                             grupos_data.append((nombre_grupo, df_g))
                 
-                # Renderizar los grupos en un formato web impecable
                 for i in range(0, len(grupos_data), 2):
                     c1, c2 = st.columns(2)
                     with c1:
@@ -246,6 +256,15 @@ try:
                         with c2:
                             st.markdown(f"#### {grupos_data[i+1][0]}")
                             st.dataframe(grupos_data[i+1][1], hide_index=True, use_container_width=True)
+
+            # --- PLAYERS ---
+            elif nombre_hoja in ["PLAYERS", "JUGADORES"]:
+                st.subheader("🔟 Los Números 10 del Mundial")
+                df_players = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(subset=['TEAM', 'PLAYER'])
+                cols = st.columns(3)
+                for i, row in enumerate(df_players.iterrows()):
+                    with cols[i % 3]:
+                        st.markdown(f"<div style='background-color:#f9f9f9; border: 1px solid #ddd; padding:15px; border-radius:8px; text-align:center; color:#333333;'><h3>{obtener_bandera(row[1]['TEAM'])} {row[1]['TEAM']}</h3><p style='font-size: 24px; margin: 0;'>👤 <b>{row[1]['PLAYER']}</b></p></div><br>", unsafe_allow_html=True)
 
             # --- OTRAS PESTAÑAS ---
             else:
