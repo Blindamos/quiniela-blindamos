@@ -15,11 +15,12 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] { background-color: #2b2b2b; color: white; border-radius: 6px 6px 0px 0px; padding: 12px 24px; font-weight: bold; }
     .stTabs [aria-selected="true"] { background-color: #f39c12 !important; color: black !important; }
+    .card-sabias { background-color: #262626; border-left: 5px solid #f39c12; padding: 15px; border-radius: 4px; margin-bottom: 15px; }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. BANDERAS (BASE DE DATOS AMPLIADA)
+# 2. BANDERAS & TRIVIAS
 # ==========================================
 BANDERAS = {
     "USA": "🇺🇸", "MEXICO": "🇲🇽", "CANADA": "🇨🇦", "ARGENTINA": "🇦🇷", "BRAZIL": "🇧🇷", "BRASIL": "🇧🇷",
@@ -35,6 +36,13 @@ def obtener_bandera(pais):
     if pd.isna(pais): return "🏳️"
     return BANDERAS.get(str(pais).strip().upper(), "🏳️")
 
+TRIVIAS = [
+    "¡El Mundial 2026 será el primero con 48 equipos!",
+    "Talleres Blindamos protege tu pasión: Primer mundial en 3 países (USA, México y Canadá).",
+    "El Estadio Azteca albergará su tercer partido inaugural.",
+    "La gran final será en el MetLife Stadium de Nueva Jersey."
+]
+
 # ==========================================
 # 3. CARGA DE DATOS & SIDEBAR
 # ==========================================
@@ -43,12 +51,21 @@ def cargar_base_datos():
     return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
 
 with st.sidebar:
-    st.markdown("### 🛡️ TALLERES BLINDAMOS")
+    # 🔥 Logo recuperado
+    try:
+        st.image("logo.png", use_container_width=True)
+    except:
+        st.markdown("### 🛡️ TALLERES BLINDAMOS")
+    
     st.markdown("---")
-    # Identificador de usuario
-    usuario_actual = st.text_input("👤 Tu Nombre (Ej: Pele, Alvaro, Marjorie)", placeholder="Ingresa tu nombre para jugar")
+    usuario_actual = st.text_input("👤 Tu Nombre / Apellido(Ej: Alvaro Giménez)", placeholder="Ingresa tu nombre para jugar")
     st.markdown("---")
-    st.markdown("⚡ *Modo Dios Configurado por Wanda*")
+    
+    # 🔥 Trivias recuperadas
+    st.markdown("### 💡 ¿Sabías qué? Mundial 2026")
+    st.markdown(f"<div class='card-sabias'>{random.choice(TRIVIAS)}</div>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("⚡ *Configurado por Blindamos IT*")
 
 # ==========================================
 # 4. MOTOR PRINCIPAL
@@ -56,19 +73,14 @@ with st.sidebar:
 try:
     xls = cargar_base_datos()
     
-    # Ocultamos las pestañas técnicas y las viejas de Excel
     pestanas_ocultas = ["SETTINGS", "PRINT", "POOL", "PREDICTOR"]
     pestanas_visibles = [h for h in xls.sheet_names if h not in pestanas_ocultas]
-    
-    # Inyectamos la nueva pestaña de Ranking
     pestanas_visibles.insert(1, "🏆 POSICIONES (RANKING)")
     
     tabs = st.tabs(pestanas_visibles)
     
     for idx, nombre_hoja in enumerate(pestanas_visibles):
         with tabs[idx]:
-            
-            # --- NUEVA PESTAÑA: RANKING ---
             if nombre_hoja == "🏆 POSICIONES (RANKING)":
                 st.subheader("🏆 Ranking Oficial Blindamos")
                 if os.path.exists("puntajes.csv"):
@@ -77,7 +89,6 @@ try:
                 else:
                     st.info("La tabla está limpia. ¡Registra tus pronósticos para ser el primero en liderar!")
 
-            # --- PESTAÑA: FIXTURE ---
             elif nombre_hoja == "FIXTURE":
                 st.subheader("⚽ Central de Predicciones")
                 df_fix = pd.read_excel(xls, sheet_name="FIXTURE", skiprows=1).dropna(subset=['HOME TEAM', 'AWAY TEAM'])
@@ -95,7 +106,6 @@ try:
                     if not usuario_actual:
                         st.error("⚠️ Identifícate: Ingresa tu nombre en el menú lateral antes de guardar.")
                     else:
-                        # Motor de guardado de base de datos
                         nuevo_registro = {"Jugador": usuario_actual, "Puntos": 0}
                         if os.path.exists("puntajes.csv"):
                             df_p = pd.read_csv("puntajes.csv")
@@ -104,15 +114,12 @@ try:
                                 df_p.to_csv("puntajes.csv", index=False)
                         else:
                             pd.DataFrame([nuevo_registro]).to_csv("puntajes.csv", index=False)
-                        
                         st.success(f"¡Atención equipo! Pronósticos de {usuario_actual} guardados y encriptados.")
 
-            # --- PESTAÑA: HOME ---
             elif nombre_hoja == "HOME":
                 st.subheader("🏁 Centro de Control Blindamos")
                 st.markdown("Navega por las pestañas superiores para registrar tus pronósticos y ver tu posición en la tabla.")
             
-            # --- PESTAÑA: PLAYERS ---
             elif nombre_hoja in ["PLAYERS", "JUGADORES"]:
                 st.subheader("🔟 Los Números 10 del Mundial")
                 df_players = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(subset=['TEAM', 'PLAYER'])
@@ -121,7 +128,6 @@ try:
                     with cols[i % 3]:
                         st.markdown(f"<div style='background-color:#222; padding:15px; border-radius:8px; text-align:center;'><h3>{obtener_bandera(row[1]['TEAM'])} {row[1]['TEAM']}</h3><p style='font-size: 24px; margin: 0;'>👤 <b>{row[1]['PLAYER']}</b></p></div><br>", unsafe_allow_html=True)
             
-            # --- DEMÁS PESTAÑAS ---
             else:
                 st.subheader(f"📊 {nombre_hoja}")
                 st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=3).dropna(how='all'), use_container_width=True, hide_index=True)
