@@ -5,10 +5,11 @@ import json
 from datetime import date
 
 # ==========================================
-# CONFIGURACIÓN MODO EXPERTO
+# CONFIGURACIÓN MODO DIOS DE LA PROGRAMACIÓN
 # ==========================================
 st.set_page_config(layout="wide", page_title="Quiniela Blindamos 2026", page_icon="🛡️")
 
+# Estilos visuales Dark Mode profesionales
 st.markdown("""
     <style>
     .stApp { background-color: #1a1a1a !important; color: #ffffff !important; }
@@ -23,7 +24,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# FUNCIONES BASE Y BANDERAS
+# BASE DE DATOS Y LOGÍSITICA DE BANDERAS
 # ==========================================
 ARCHIVO_DB = "db_blindamos.csv"
 
@@ -34,12 +35,112 @@ def cargar_db():
 def guardar_db(db_to_save): 
     db_to_save.to_csv(ARCHIVO_DB, index=False)
 
-def es_equipo_tbd(n): 
-    return any(p in str(n).upper() for p in ["TBD", "TDB", "WINNER", "GANADOR"]) or (len(str(n)) <= 3 and any(c.isdigit() for c in str(n)))
+BANDERAS = {
+    "MÉXICO": "🇲🇽", "MEXICO": "🇲🇽", "SUDÁFRICA": "🇿🇦", "SOUTH AFRICA": "🇿🇦",
+    "REPÚBLICA DE COREA": "🇰🇷", "COREA DEL SUR": "🇰🇷", "SOUTH KOREA": "🇰🇷",
+    "REPÚBLICA CHECA": "🇨🇿", "CZECH REPUBLIC": "🇨🇿",
+    "CANADÁ": "🇨🇦", "CANADA": "🇨🇦", "BOSNIA Y HERZEGOVINA": "🇧🇦", "BOSNIA": "🇧🇦",
+    "ESTADOS UNIDOS": "🇺🇸", "USA": "🇺🇸", "PARAGUAY": "🇵🇾",
+    "CATAR": "🇶🇦", "QATAR": "🇶🇦", "SUIZA": "🇨🇭", "SWITZERLAND": "🇨🇭",
+    "BRASIL": "🇧🇷", "BRAZIL": "🇧🇷", "MARRUECOS": "🇲🇦", "MOROCCO": "🇲🇦",
+    "HAITÍ": "🇭🇹", "HAITI": "🇭🇹", "ESCOCIA": "🏴%f3%a0%81%a7%f3%a0%81%a3%f3%a0%81%b3%f3%a0%81%b4%f3%a0%81%b3%f3%a0%81%b7", "SCOTLAND": "🏴%f3%a0%81%a7%f3%a0%81%a3%f3%a0%81%b3%f3%a0%81%b4%f3%a0%81%b3%f3%a0%81%b7",
+    "AUSTRALIA": "🇦🇺", "TURQUÍA": "🇹🇷", "TURKEY": "🇹🇷", "TURQUIA": "🇹🇷",
+    "ALEMANIA": "🇩🇪", "GERMANY": "🇩🇪", "CURAZAO": "🇨🇼", "CURACAO": "🇨🇼",
+    "PAÍSES BAJOS": "🇳🇱", "PAISES BAJOS": "🇳🇱", "NETHERLANDS": "🇳🇱", "JAPÓN": "🇯🇵", "JAPON": "🇯🇵", "JAPAN": "🇯🇵",
+    "COSTA DE MARFIL": "🇨🇮", "IVORY COAST": "🇨🇮", "ECUADOR": "🇪🇨",
+    "SUECIA": "🇸🇪", "SWEDEN": "🇸🇪", "TÚNEZ": "🇹🇳", "TUNEZ": "🇹🇳", "TUNISIA": "🇹🇳",
+    "ESPAÑA": "🇪🇸", "SPAIN": "🇪🇸", "CABO VERDE": "🇨🇻", "CAPE VERDE": "🇨🇻",
+    "BÉLGICA": "🇧🇪", "BELGIUM": "🇧🇪", "EGIPTO": "🇪🇬", "EGYPT": "🇪🇬",
+    "ARABIA SAUDÍ": "🇸🇦", "ARABIA SAUDITA": "🇸🇦", "SAUDI ARABIA": "🇸🇦", "URUGUAY": "🇺🇾",
+    "RI DE IRÁN": "🇮🇷", "IRÁN": "🇮🇷", "IRAN": "🇮🇷", "NUEVA ZELANDA": "🇳🇿", "NEW ZEALAND": "🇳🇿",
+    "FRANCIA": "🇫🇷", "FRANCE": "🇫🇷", "SENEGAL": "🇸🇳", "IRAK": "🇮🇶", "IRAQ": "🇮🇶", "NORUEGA": "🇳🇴", "NORWAY": "🇳🇴",
+    "ARGENTINA": "🇦🇷", "ARGELIA": "🇩🇿", "ALGERIA": "🇩🇿", "AUSTRIA": "🇦🇹", "JORDANIA": "🇯🇴", "JORDAN": "🇯🇴",
+    "PORTUGAL": "🇵🇹", "RD CONGO": "🇨🇩", "CONGO": "🇨🇩", "INGLATERRA": "🏴%f3%a0%81%a7%f3%a0%81%a2%f3%a0%81%b5%f3%a0%81%b4%f3%a0%81%b4%f3%a0%81%b7", "ENGLAND": "🏴%f3%a0%81%a7%f3%a0%81%a2%f3%a0%81%b5%f3%a0%81%b4%f3%a0%81%b4%f3%a0%81%b7",
+    "CROACIA": "🇭🇷", "CROATIA": "🇭🇷", "GHANA": "🇬🇭", "PANAMÁ": "🇵🇦", "PANAMA": "🇵🇦",
+    "UZBEKISTÁN": "🇺🇿", "UZBEKISTAN": "🇺🇿", "COLOMBIA": "🇨🇴", "VENEZUELA": "🇻🇪", "VEN": "🇻🇪"
+}
 
-BANDERAS = {"USA": "🇺🇸", "MEXICO": "🇲🇽", "CANADA": "🇨🇦", "ARGENTINA": "🇦🇷", "BRAZIL": "🇧🇷", "BRASIL": "🇧🇷", "FRANCE": "🇫🇷", "SPAIN": "🇪🇸", "ESPAÑA": "🇪🇸", "GERMANY": "🇩🇪", "ITALY": "🇮🇹", "ENGLAND": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "URUGUAY": "🇺🇾", "COLOMBIA": "🇨🇴", "VENEZUELA": "🇻🇪", "CHILE": "🇨🇱", "PERU": "🇵🇪", "PERÚ": "🇵🇪", "ECUADOR": "🇪🇨", "PARAGUAY": "🇵🇾", "BOLIVIA": "🇧🇴", "NETHERLANDS": "🇳🇱", "PAISES BAJOS": "🇳🇱", "PORTUGAL": "🇵🇹", "BELGIUM": "🇧🇪", "BÉLGICA": "🇧🇪", "CROATIA": "🇭🇷", "CROACIA": "🇭🇷", "GREECE": "🇬🇷", "GRECIA": "🇬🇷"}
+def obtener_bandera(pais):
+    if pd.isna(pais): return "🏳️"
+    return BANDERAS.get(str(pais).strip().upper(), "🏳️")
 
-def obtener_bandera(pais): return BANDERAS.get(str(pais).strip().upper(), "🏳️") if pd.notna(pais) else "🏳️"
+# ==========================================
+# BASE DE DATOS FIJA INCORPORADA (CALENDARIO OFICIAL)
+# ==========================================
+JUEGOS_FIXTURE = [
+    {"DATE": "Jueves, 11 de junio 2026", "TIME": "15:00", "HOME TEAM": "MÉXICO", "AWAY TEAM": "SUDÁFRICA", "STAGE": "Grupo A"},
+    {"DATE": "Jueves, 11 de junio 2026", "TIME": "22:00", "HOME TEAM": "REPÚBLICA DE COREA", "AWAY TEAM": "REPÚBLICA CHECA", "STAGE": "Grupo A"},
+    {"DATE": "Viernes, 12 de junio 2026", "TIME": "15:00", "HOME TEAM": "CANADÁ", "AWAY TEAM": "BOSNIA Y HERZEGOVINA", "STAGE": "Grupo B"},
+    {"DATE": "Viernes, 12 de junio 2026", "TIME": "21:00", "HOME TEAM": "ESTADOS UNIDOS", "AWAY TEAM": "PARAGUAY", "STAGE": "Grupo D"},
+    {"DATE": "Sábado, 13 de junio 2026", "TIME": "15:00", "HOME TEAM": "CATAR", "AWAY TEAM": "SUIZA", "STAGE": "Grupo B"},
+    {"DATE": "Sábado, 13 de junio 2026", "TIME": "18:00", "HOME TEAM": "BRASIL", "AWAY TEAM": "MARRUECOS", "STAGE": "Grupo C"},
+    {"DATE": "Sábado, 13 de junio 2026", "TIME": "21:00", "HOME TEAM": "HAITÍ", "AWAY TEAM": "ESCOCIA", "STAGE": "Grupo C"},
+    {"DATE": "Sábado, 13 de junio 2026", "TIME": "00:00", "HOME TEAM": "AUSTRALIA", "AWAY TEAM": "TURQUÍA", "STAGE": "Grupo D"},
+    {"DATE": "Domingo, 14 de junio 2026", "TIME": "13:00", "HOME TEAM": "ALEMANIA", "AWAY TEAM": "CURAZAO", "STAGE": "Grupo E"},
+    {"DATE": "Domingo, 14 de junio 2026", "TIME": "16:00", "HOME TEAM": "PAÍSES BAJOS", "AWAY TEAM": "JAPÓN", "STAGE": "Grupo F"},
+    {"DATE": "Domingo, 14 de junio 2026", "TIME": "19:00", "HOME TEAM": "COSTA DE MARFIL", "AWAY TEAM": "ECUADOR", "STAGE": "Grupo E"},
+    {"DATE": "Domingo, 14 de junio 2026", "TIME": "22:00", "HOME TEAM": "SUECIA", "AWAY TEAM": "TÚNEZ", "STAGE": "Grupo F"},
+    {"DATE": "Lunes, 15 de junio 2026", "TIME": "12:00", "HOME TEAM": "ESPAÑA", "AWAY TEAM": "CABO VERDE", "STAGE": "Grupo H"},
+    {"DATE": "Lunes, 15 de junio 2026", "TIME": "15:00", "HOME TEAM": "BÉLGICA", "AWAY TEAM": "EGIPTO", "STAGE": "Grupo G"},
+    {"DATE": "Lunes, 15 de junio 2026", "TIME": "18:00", "HOME TEAM": "ARABIA SAUDÍ", "AWAY TEAM": "URUGUAY", "STAGE": "Grupo H"},
+    {"DATE": "Lunes, 15 de junio 2026", "TIME": "21:00", "HOME TEAM": "RI DE IRÁN", "AWAY TEAM": "NUEVA ZELANDA", "STAGE": "Grupo G"},
+    {"DATE": "Martes, 16 de junio 2026", "TIME": "15:00", "HOME TEAM": "FRANCIA", "AWAY TEAM": "SENEGAL", "STAGE": "Grupo I"},
+    {"DATE": "Martes, 16 de junio 2026", "TIME": "18:00", "HOME TEAM": "IRAK", "AWAY TEAM": "NORUEGA", "STAGE": "Grupo I"},
+    {"DATE": "Martes, 16 de junio 2026", "TIME": "21:00", "HOME TEAM": "ARGENTINA", "AWAY TEAM": "ARGELIA", "STAGE": "Grupo J"},
+    {"DATE": "Martes, 16 de junio 2026", "TIME": "00:00", "HOME TEAM": "AUSTRIA", "AWAY TEAM": "JORDANIA", "STAGE": "Grupo J"},
+    {"DATE": "Miércoles, 17 de junio 2026", "TIME": "13:00", "HOME TEAM": "PORTUGAL", "AWAY TEAM": "RD CONGO", "STAGE": "Grupo K"},
+    {"DATE": "Miércoles, 17 de junio 2026", "TIME": "16:00", "HOME TEAM": "INGLATERRA", "AWAY TEAM": "CROACIA", "STAGE": "Grupo L"},
+    {"DATE": "Miércoles, 17 de junio 2026", "TIME": "19:00", "HOME TEAM": "GHANA", "AWAY TEAM": "PANAMÁ", "STAGE": "Grupo L"},
+    {"DATE": "Miércoles, 17 de junio 2026", "TIME": "22:00", "HOME TEAM": "UZBEKISTÁN", "AWAY TEAM": "COLOMBIA", "STAGE": "Grupo K"},
+    {"DATE": "Jueves, 18 de junio 2026", "TIME": "12:00", "HOME TEAM": "REPÚBLICA CHECA", "AWAY TEAM": "SUDÁFRICA", "STAGE": "Grupo A"},
+    {"DATE": "Jueves, 18 de junio 2026", "TIME": "15:00", "HOME TEAM": "SUIZA", "AWAY TEAM": "BOSNIA Y HERZEGOVINA", "STAGE": "Grupo B"},
+    {"DATE": "Jueves, 18 de junio 2026", "TIME": "18:00", "HOME TEAM": "CANADÁ", "AWAY TEAM": "CATAR", "STAGE": "Grupo B"},
+    {"DATE": "Jueves, 18 de junio 2026", "TIME": "21:00", "HOME TEAM": "MÉXICO", "AWAY TEAM": "REPÚBLICA DE COREA", "STAGE": "Grupo A"},
+    {"DATE": "Viernes, 19 de junio 2026", "TIME": "15:00", "HOME TEAM": "ESTADOS UNIDOS", "AWAY TEAM": "AUSTRALIA", "STAGE": "Grupo D"},
+    {"DATE": "Viernes, 19 de junio 2026", "TIME": "18:00", "HOME TEAM": "ESCOCIA", "AWAY TEAM": "MARRUECOS", "STAGE": "Grupo C"},
+    {"DATE": "Viernes, 19 de junio 2026", "TIME": "21:00", "HOME TEAM": "BRASIL", "AWAY TEAM": "HAITÍ", "STAGE": "Grupo C"},
+    {"DATE": "Viernes, 19 de junio 2026", "TIME": "00:00", "HOME TEAM": "TURQUÍA", "AWAY TEAM": "PARAGUAY", "STAGE": "Grupo D"},
+    {"DATE": "Sábado, 20 de junio 2026", "TIME": "13:00", "HOME TEAM": "PAÍSES BAJOS", "AWAY TEAM": "SUECIA", "STAGE": "Grupo F"},
+    {"DATE": "Sábado, 20 de junio 2026", "TIME": "16:00", "HOME TEAM": "ALEMANIA", "AWAY TEAM": "COSTA DE MARFIL", "STAGE": "Grupo E"},
+    {"DATE": "Sábado, 20 de junio 2026", "TIME": "22:00", "HOME TEAM": "ECUADOR", "AWAY TEAM": "CURAZAO", "STAGE": "Grupo E"},
+    {"DATE": "Sábado, 20 de junio 2026", "TIME": "00:00", "HOME TEAM": "TÚNEZ", "AWAY TEAM": "JAPÓN", "STAGE": "Grupo F"},
+    {"DATE": "Domingo, 21 de junio 2026", "TIME": "12:00", "HOME TEAM": "ESPAÑA", "AWAY TEAM": "ARABIA SAUDÍ", "STAGE": "Grupo H"},
+    {"DATE": "Domingo, 21 de junio 2026", "TIME": "15:00", "HOME TEAM": "BÉLGICA", "AWAY TEAM": "IRÁN", "STAGE": "Grupo G"},
+    {"DATE": "Domingo, 21 de junio 2026", "TIME": "18:00", "HOME TEAM": "URUGUAY", "AWAY TEAM": "CABO VERDE", "STAGE": "Grupo H"},
+    {"DATE": "Domingo, 21 de junio 2026", "TIME": "21:00", "HOME TEAM": "NUEVA ZELANDA", "AWAY TEAM": "EGIPTO", "STAGE": "Grupo G"},
+    {"DATE": "Lunes, 22 de junio 2026", "TIME": "13:00", "HOME TEAM": "ARGENTINA", "AWAY TEAM": "AUSTRIA", "STAGE": "Grupo J"},
+    {"DATE": "Lunes, 22 de junio 2026", "TIME": "17:00", "HOME TEAM": "FRANCIA", "AWAY TEAM": "IRAK", "STAGE": "Grupo I"},
+    {"DATE": "Lunes, 22 de junio 2026", "TIME": "20:00", "HOME TEAM": "NORUEGA", "AWAY TEAM": "SENEGAL", "STAGE": "Grupo I"},
+    {"DATE": "Lunes, 22 de junio 2026", "TIME": "23:00", "HOME TEAM": "JORDANIA", "AWAY TEAM": "ARGELIA", "STAGE": "Grupo J"},
+    {"DATE": "Martes, 23 de junio 2026", "TIME": "13:00", "HOME TEAM": "PORTUGAL", "AWAY TEAM": "UZBEKISTÁN", "STAGE": "Grupo K"},
+    {"DATE": "Martes, 23 de junio 2026", "TIME": "16:00", "HOME TEAM": "INGLATERRA", "AWAY TEAM": "GHANA", "STAGE": "Grupo L"},
+    {"DATE": "Martes, 23 de junio 2026", "TIME": "19:00", "HOME TEAM": "PANAMÁ", "AWAY TEAM": "CROACIA", "STAGE": "Grupo L"},
+    {"DATE": "Martes, 23 de junio 2026", "TIME": "22:00", "HOME TEAM": "COLOMBIA", "AWAY TEAM": "RD CONGO", "STAGE": "Grupo K"},
+    {"DATE": "Miércoles, 24 de junio 2026", "TIME": "15:00", "HOME TEAM": "SUIZA", "AWAY TEAM": "CANADÁ", "STAGE": "Grupo B"},
+    {"DATE": "Miércoles, 24 de junio 2026", "TIME": "15:00", "HOME TEAM": "BOSNIA Y HERZEGOVINA", "AWAY TEAM": "CATAR", "STAGE": "Grupo B"},
+    {"DATE": "Miércoles, 24 de junio 2026", "TIME": "18:00", "HOME TEAM": "ESCOCIA", "AWAY TEAM": "BRASIL", "STAGE": "Grupo C"},
+    {"DATE": "Miércoles, 24 de junio 2026", "TIME": "18:00", "HOME TEAM": "MARRUECOS", "AWAY TEAM": "HAITÍ", "STAGE": "Grupo C"},
+    {"DATE": "Miércoles, 24 de junio 2026", "TIME": "21:00", "HOME TEAM": "REPÚBLICA CHECA", "AWAY TEAM": "MÉXICO", "STAGE": "Grupo A"},
+    {"DATE": "Miércoles, 24 de junio 2026", "TIME": "21:00", "HOME TEAM": "SUDÁFRICA", "AWAY TEAM": "REPÚBLICA DE COREA", "STAGE": "Grupo A"},
+    {"DATE": "Jueves, 25 de junio 2026", "TIME": "16:00", "HOME TEAM": "CURAZAO", "AWAY TEAM": "COSTA DE MARFIL", "STAGE": "Grupo E"},
+    {"DATE": "Jueves, 25 de junio 2026", "TIME": "16:00", "HOME TEAM": "ECUADOR", "AWAY TEAM": "ALEMANIA", "STAGE": "Grupo E"},
+    {"DATE": "Jueves, 25 de junio 2026", "TIME": "19:00", "HOME TEAM": "JAPÓN", "AWAY TEAM": "SUECIA", "STAGE": "Grupo F"},
+    {"DATE": "Jueves, 25 de junio 2026", "TIME": "19:00", "HOME TEAM": "TÚNEZ", "AWAY TEAM": "PAÍSES BAJOS", "STAGE": "Grupo F"},
+    {"DATE": "Jueves, 25 de junio 2026", "TIME": "22:00", "HOME TEAM": "TURQUÍA", "AWAY TEAM": "ESTADOS UNIDOS", "STAGE": "Grupo D"},
+    {"DATE": "Jueves, 25 de junio 2026", "TIME": "22:00", "HOME TEAM": "PARAGUAY", "AWAY TEAM": "AUSTRALIA", "STAGE": "Grupo D"},
+    {"DATE": "Viernes, 26 de junio 2026", "TIME": "15:00", "HOME TEAM": "NORUEGA", "AWAY TEAM": "FRANCIA", "STAGE": "Grupo I"},
+    {"DATE": "Viernes, 26 de junio 2026", "TIME": "15:00", "HOME TEAM": "SENEGAL", "AWAY TEAM": "IRAK", "STAGE": "Grupo I"},
+    {"DATE": "Viernes, 26 de junio 2026", "TIME": "20:00", "HOME TEAM": "CABO VERDE", "AWAY TEAM": "ARABIA SAUDÍ", "STAGE": "Grupo H"},
+    {"DATE": "Viernes, 26 de junio 2026", "TIME": "20:00", "HOME TEAM": "URUGUAY", "AWAY TEAM": "ESPAÑA", "STAGE": "Grupo H"},
+    {"DATE": "Viernes, 26 de junio 2026", "TIME": "23:00", "HOME TEAM": "EGIPTO", "AWAY TEAM": "IRÁN", "STAGE": "Grupo G"},
+    {"DATE": "Viernes, 26 de junio 2026", "TIME": "23:00", "HOME TEAM": "NUEVA ZELANDA", "AWAY TEAM": "BÉLGICA", "STAGE": "Grupo G"},
+    {"DATE": "Sábado, 27 de junio 2026", "TIME": "17:00", "HOME TEAM": "PANAMÁ", "AWAY TEAM": "INGLATERRA", "STAGE": "Grupo L"},
+    {"DATE": "Sábado, 27 de junio 2026", "TIME": "17:00", "HOME TEAM": "CROACIA", "AWAY TEAM": "GHANA", "STAGE": "Grupo L"},
+    {"DATE": "Sábado, 27 de junio 2026", "TIME": "19:30", "HOME TEAM": "COLOMBIA", "AWAY TEAM": "PORTUGAL", "STAGE": "Grupo K"},
+    {"DATE": "Sábado, 27 de junio 2026", "TIME": "19:30", "HOME TEAM": "RD CONGO", "AWAY TEAM": "UZBEKISTÁN", "STAGE": "Grupo K"},
+    {"DATE": "Sábado, 27 de junio 2026", "TIME": "22:00", "HOME TEAM": "ARGELIA", "AWAY TEAM": "AUSTRIA", "STAGE": "Grupo J"},
+    {"DATE": "Sábado, 27 de junio 2026", "TIME": "22:00", "HOME TEAM": "JORDANIA", "AWAY TEAM": "ARGENTINA", "STAGE": "Grupo J"}
+]
 
 @st.cache_resource
 def cargar_excel(): return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
@@ -47,16 +148,17 @@ def cargar_excel(): return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
 if "logged_in" not in st.session_state: st.session_state.update({"logged_in": False, "usuario": "", "preds": {}})
 
 # ==========================================
-# SIDEBAR (LOGO Y LOGIN MÓVIL)
+# SIDEBAR (CON EJEMPLO DE NOMBRE Y LOGO)
 # ==========================================
 with st.sidebar:
     try:
         st.image("logo.png", use_container_width=True)
     except:
-        st.markdown("### TALLERES BLINDAMOS")
+        st.markdown("### 🛡️ TALLERES BLINDAMOS")
         
     st.subheader("Login / Registro")
-    usuario_input = st.text_input("👤 Tu Nombre").strip().upper()
+    # REQUISITO EXPLICITO: Ejemplo configurado con Alvaro Giménez
+    usuario_input = st.text_input("👤 Tu Nombre", placeholder="Ej: Alvaro Giménez").strip().upper()
     pin_input = st.text_input("🔑 PIN (4+ dígitos)", type="password").strip()
     
     if st.button("Entrar / Registrarse"):
@@ -67,13 +169,16 @@ with st.sidebar:
                     preds_str = db[db["Jugador"] == usuario_input].iloc[0]["Predicciones"]
                     st.session_state.update({"logged_in": True, "usuario": usuario_input, "preds": json.loads(preds_str) if pd.notna(preds_str) else {}})
                     st.success(f"Bienvenido, {usuario_input}")
-                else: st.error("❌ Nombre ya tomado o PIN incorrecto.")
+                else: st.error("❌ Nombre de usuario ya tomado o PIN incorrecto.")
             else:
                 db = pd.concat([db, pd.DataFrame([{"Jugador": usuario_input, "PIN": pin_input, "Puntos": 0, "Predicciones": "{}"}])], ignore_index=True)
                 guardar_db(db)
                 st.session_state.update({"logged_in": True, "usuario": usuario_input, "preds": {}})
                 st.success(f"✅ Registrado como {usuario_input}")
         else: st.error("❌ Datos incompletos.")
+        
+    if st.session_state["logged_in"]:
+        st.info(f"Conectado: {st.session_state['usuario']}")
 
 # ==========================================
 # MOTOR PRINCIPAL
@@ -88,7 +193,7 @@ try:
     for idx, nombre_hoja in enumerate(tabs_finales):
         with tabs[idx]:
             if nombre_hoja == "🏠 INICIO":
-                st.markdown("## 🛡️ Centro de Control Blindamos")
+                st.markdown("## 🛡️ Centro de Control Quiniela 2026")
                 st.markdown("---")
                 st.markdown("### Bienvenido al sistema élite de pronósticos.")
                 st.markdown("**Instrucciones:**\n1. Toca la flecha **>** (arriba a la izquierda) en tu móvil para abrir el menú.\n2. Ingresa tu Nombre y PIN.\n3. Ve a **FIXTURE** para cargar predicciones.\n4. Guarda antes de salir. Los partidos se bloquean al iniciar.")
@@ -101,56 +206,7 @@ try:
                 else: st.warning("Aún no hay jugadores registrados.")
             
             elif str(nombre_hoja).strip().upper() == "FIXTURE":
-                df_fix = pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(subset=['HOME TEAM', 'AWAY TEAM'])
+                df_fix = pd.DataFrame(JUEGOS_FIXTURE)
                 with st.form("f"):
                     st.write("---")
-                    bloqueo_date = date(2026, 6, 27)
-                    
-                    for i, r in df_fix.iterrows():
-                        if es_equipo_tbd(r['HOME TEAM']) or es_equipo_tbd(r['AWAY TEAM']): continue
-                        try: match_date = pd.to_datetime(r['DATE']).date()
-                        except: match_date = None
-                        
-                        locked = True if match_date and match_date >= bloqueo_date else False
-                        
-                        c1, c2, c3, c4, c5 = st.columns([3, 1, 1, 1, 3])
-                        c1.markdown(f"#### {obtener_bandera(r['HOME TEAM'])} {r['HOME TEAM']}")
-                        
-                        if locked:
-                            c2.write("🚫 Lock")
-                            c3.markdown("## VS")
-                            c4.write("🚫 Lock")
-                        else:
-                            h_pred = st.session_state["preds"].get(f"h_{i}", 0)
-                            a_pred = st.session_state["preds"].get(f"a_{i}", 0)
-                            c2.number_input("", key=f"h_{i}", label_visibility="collapsed", min_value=0, step=1, value=int(h_pred))
-                            c3.markdown("## VS")
-                            c4.number_input("", key=f"a_{i}", label_visibility="collapsed", min_value=0, step=1, value=int(a_pred))
-                        
-                        c5.markdown(f"#### {r['AWAY TEAM']} {obtener_bandera(r['AWAY TEAM'])}")
-                        st.write("---")
-                    
-                    if st.form_submit_button("Guardar Predicciones"):
-                        if st.session_state["logged_in"]:
-                            for key in st.session_state.keys():
-                                if key.startswith("h_") or key.startswith("a_"):
-                                    st.session_state["preds"][key] = st.session_state[key]
-                            
-                            db = cargar_db()
-                            idx_user = db[db["Jugador"] == st.session_state["usuario"]].index[0]
-                            db.at[idx_user, "Predicciones"] = json.dumps(st.session_state["preds"])
-                            guardar_db(db)
-                            st.success("✅ Guardado.")
-                        else: st.error("❌ Loguéate primero.")
-            
-            elif "GROUP" in str(nombre_hoja).upper() or str(nombre_hoja).upper() in standings_bloqueados:
-                st.subheader(f"📊 {nombre_hoja}")
-                if str(nombre_hoja).upper() in standings_bloqueados:
-                    st.warning("🚫 Fase bloqueada. Se activa en eliminatorias.")
-                else:
-                    st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(how='all'), use_container_width=True, hide_index=True)
-            else:
-                st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja).dropna(how='all'), use_container_width=True, hide_index=True)
-
-except Exception as e:
-    st.error(f"Asegúrate de tener el archivo Excel en la misma carpeta.")
+                    bloqueo_date = date
