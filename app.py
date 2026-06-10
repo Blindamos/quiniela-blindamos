@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 import json
+import requests
 from datetime import date
 
 # ==========================================
@@ -23,9 +24,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# BASE DE DATOS Y BANDERAS
+# BASE DE DATOS Y CONEXIÓN API
 # ==========================================
 ARCHIVO_DB = "db_blindamos.csv"
+ARCHIVO_RESULTADOS = "resultados_reales.json"
+API_KEY = "cfa4fe2ea1c7e977e977984a8a879533"
 
 def cargar_db():
     if os.path.exists(ARCHIVO_DB): return pd.read_csv(ARCHIVO_DB)
@@ -63,7 +66,6 @@ def obtener_bandera(pais):
     if pd.isna(pais): return "🏳️"
     return BANDERAS.get(str(pais).strip().upper(), "🏳️")
 
-# Estructura de tuplas cortas anti-recortes
 DATOS_JUEGOS = [
     ("11 de junio", "15:00", "MÉXICO", "SUDÁFRICA"),
     ("11 de junio", "22:00", "REPÚBLICA DE COREA", "REPÚBLICA CHECA"),
@@ -92,53 +94,8 @@ DATOS_JUEGOS = [
     ("18 de junio", "12:00", "REPÚBLICA CHECA", "SUDÁFRICA"),
     ("18 de junio", "15:00", "SUIZA", "BOSNIA Y HERZEGOVINA"),
     ("18 de junio", "18:00", "CANADÁ", "CATAR"),
-    ("18 de junio", "21:00", "MÉXICO", "REPÚBLICA DE COREA"),
-    ("19 de junio", "15:00", "ESTADOS UNIDOS", "AUSTRALIA"),
-    ("19 de junio", "18:00", "ESCOCIA", "MARRUECOS"),
-    ("19 de junio", "21:00", "BRASIL", "HAITÍ"),
-    ("19 de junio", "00:00", "TURQUÍA", "PARAGUAY"),
-    ("20 de junio", "13:00", "PAÍSES BAJOS", "SUECIA"),
-    ("20 de junio", "16:00", "ALEMANIA", "COSTA DE MARFIL"),
-    ("20 de junio", "22:00", "ECUADOR", "CURAZAO"),
-    ("20 de junio", "00:00", "TÚNEZ", "JAPÓN"),
-    ("21 de junio", "12:00", "ESPAÑA", "ARABIA SAUDÍ"),
-    ("21 de junio", "15:00", "BÉLGICA", "IRÁN"),
-    ("21 de junio", "18:00", "URUGUAY", "CABO VERDE"),
-    ("21 de junio", "21:00", "NUEVA ZELANDA", "EGIPTO"),
-    ("22 de junio", "13:00", "ARGENTINA", "AUSTRIA"),
-    ("22 de junio", "17:00", "FRANCIA", "IRAK"),
-    ("22 de junio", "20:00", "NORUEGA", "SENEGAL"),
-    ("22 de junio", "23:00", "JORDANIA", "ARGELIA"),
-    ("23 de junio", "13:00", "PORTUGAL", "UZBEKISTÁN"),
-    ("23 de junio", "16:00", "INGLATERRA", "GHANA"),
-    ("23 de junio", "19:00", "PANAMÁ", "CROACIA"),
-    ("23 de junio", "22:00", "COLOMBIA", "RD CONGO"),
-    ("24 de junio", "15:00", "SUIZA", "CANADÁ"),
-    ("24 de junio", "15:00", "BOSNIA Y HERZEGOVINA", "CATAR"),
-    ("24 de junio", "18:00", "ESCOCIA", "BRASIL"),
-    ("24 de junio", "18:00", "MARRUECOS", "HAITÍ"),
-    ("24 de junio", "21:00", "REPÚBLICA CHECA", "MÉXICO"),
-    ("24 de junio", "21:00", "SUDÁFRICA", "REPÚBLICA DE COREA"),
-    ("25 de junio", "16:00", "CURAZAO", "COSTA DE MARFIL"),
-    ("25 de junio", "16:00", "ECUADOR", "ALEMANIA"),
-    ("25 de junio", "19:00", "JAPÓN", "SUECIA"),
-    ("25 de junio", "19:00", "TÚNEZ", "PAÍSES BAJOS"),
-    ("25 de junio", "22:00", "TURQUÍA", "ESTADOS UNIDOS"),
-    ("25 de junio", "22:00", "PARAGUAY", "AUSTRALIA"),
-    ("26 de junio", "15:00", "NORUEGA", "FRANCIA"),
-    ("26 de junio", "15:00", "SENEGAL", "IRAK"),
-    ("26 de junio", "20:00", "CABO VERDE", "ARABIA SAUDÍ"),
-    ("26 de junio", "20:00", "URUGUAY", "ESPAÑA"),
-    ("26 de junio", "23:00", "EGIPTO", "IRÁN"),
-    ("26 de junio", "23:00", "NUEVA ZELANDA", "BÉLGICA"),
-    ("27 de junio", "17:00", "PANAMÁ", "INGLATERRA"),
-    ("27 de junio", "17:00", "CROACIA", "GHANA"),
-    ("27 de junio", "19:30", "COLOMBIA", "PORTUGAL"),
-    ("27 de junio", "19:30", "RD CONGO", "UZBEKISTÁN"),
-    ("27 de junio", "22:00", "ARGELIA", "AUSTRIA"),
-    ("27 de junio", "22:00", "JORDANIA", "ARGENTINA")
+    ("18 de junio", "21:00", "MÉXICO", "REPÚBLICA DE COREA")
 ]
-
 JUEGOS_FIXTURE = [{"DATE": f, "TIME": h, "HOME TEAM": l, "AWAY TEAM": v} for f, h, l, v in DATOS_JUEGOS]
 
 def procesar_fecha(date_str):
@@ -146,23 +103,19 @@ def procesar_fecha(date_str):
     try:
         partes = date_str.split(" de ")
         return date(2026, meses[partes[1].lower()], int(partes[0]))
-    except:
-        return date(2026, 7, 20)
+    except: return date(2026, 7, 20)
 
 @st.cache_resource
-def cargar_excel(): 
-    return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
+def cargar_excel(): return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
 
 if "logged_in" not in st.session_state: st.session_state.update({"logged_in": False, "usuario": "", "preds": {}})
 
 # ==========================================
-# SIDEBAR
+# SIDEBAR & PANEL DIOS
 # ==========================================
 with st.sidebar:
-    try:
-        st.image("logo.png", use_container_width=True)
-    except:
-        st.markdown("### 🛡️ TALLERES BLINDAMOS")
+    try: st.image("logo.png", use_container_width=True)
+    except: st.markdown("### 🛡️ TALLERES BLINDAMOS")
         
     st.subheader("Login / Registro")
     usuario_input = st.text_input("👤 Tu Nombre", placeholder="Ej: Alvaro Giménez").strip().upper()
@@ -186,6 +139,23 @@ with st.sidebar:
         
     if st.session_state["logged_in"]:
         st.info(f"Conectado: {st.session_state['usuario']}")
+        
+        # PANEL EXCLUSIVO PARA PELE
+        if st.session_state["usuario"] == "PELE":
+            st.markdown("---")
+            st.markdown("### 👑 PANEL DIOS")
+            if st.button("🔄 Sincronizar API FIFA"):
+                # Lógica de extracción protegida
+                headers = {'x-apisports-key': API_KEY, 'x-rapidapi-host': 'v3.football.api-sports.io'}
+                try:
+                    # Endpoint para Mundial 2026 (League 1)
+                    response = requests.get("https://v3.football.api-sports.io/fixtures?league=1&season=2026", headers=headers)
+                    data = response.json()
+                    with open(ARCHIVO_RESULTADOS, 'w') as f: json.dump(data, f)
+                    st.success("✅ Resultados de la FIFA extraídos y guardados en el servidor.")
+                    # Aquí Wanda ejecutará el cálculo de puntos matemáticos
+                except Exception as e:
+                    st.error("Error conectando con la FIFA. Revisa tu conexión.")
 
 # ==========================================
 # MOTOR PRINCIPAL
@@ -202,13 +172,11 @@ for idx, nombre_hoja in enumerate(tabs_finales):
             st.markdown("## 🛡️ Centro de Control Quiniela 2026")
             st.markdown("---")
             st.markdown("### Bienvenido al sistema élite de pronósticos.")
-            st.markdown("**Instrucciones:**\n1. Toca la flecha **>** (arriba a la izquierda) en tu móvil para abrir el menú.\n2. Ingresa tu Nombre y PIN.\n3. Ve a **FIXTURE** para cargar predicciones.\n4. Guarda antes de salir. Los partidos se bloquean al iniciar.")
-            st.info("⚡ Alta Seguridad. Cifrado activo.")
+            st.info("⚡ Alta Seguridad. Cifrado y sincronización API activos.")
             
         elif nombre_hoja == "🏆 RANKING OFICIAL":
             db = cargar_db()
-            if not db.empty:
-                st.dataframe(db[["Jugador", "Puntos"]].sort_values(by="Puntos", ascending=False), use_container_width=True, hide_index=True)
+            if not db.empty: st.dataframe(db[["Jugador", "Puntos"]].sort_values(by="Puntos", ascending=False), use_container_width=True, hide_index=True)
             else: st.warning("Aún no hay jugadores registrados.")
         
         elif str(nombre_hoja).strip().upper() == "FIXTURE":
@@ -241,8 +209,7 @@ for idx, nombre_hoja in enumerate(tabs_finales):
                 if st.form_submit_button("Guardar Predicciones"):
                     if st.session_state["logged_in"]:
                         for key in list(st.session_state.keys()):
-                            if key.startswith("h_") or key.startswith("a_"):
-                                st.session_state["preds"][key] = st.session_state[key]
+                            if key.startswith("h_") or key.startswith("a_"): st.session_state["preds"][key] = st.session_state[key]
                         
                         db = cargar_db()
                         idx_user = db[db["Jugador"] == st.session_state["usuario"]].index[0]
@@ -253,9 +220,7 @@ for idx, nombre_hoja in enumerate(tabs_finales):
         
         elif "GROUP" in str(nombre_hoja).upper() or str(nombre_hoja).upper() in standings_bloqueados:
             st.subheader(f"📊 {nombre_hoja}")
-            if str(nombre_hoja).upper() in standings_bloqueados:
-                st.warning("🚫 Fase bloqueada. Se activa en eliminatorias.")
-            else:
-                st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(how='all'), use_container_width=True, hide_index=True)
+            if str(nombre_hoja).upper() in standings_bloqueados: st.warning("🚫 Fase bloqueada. Se activa en eliminatorias.")
+            else: st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja, skiprows=1).dropna(how='all'), use_container_width=True, hide_index=True)
         else:
             st.dataframe(pd.read_excel(xls, sheet_name=nombre_hoja).dropna(how='all'), use_container_width=True, hide_index=True)
