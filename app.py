@@ -5,11 +5,10 @@ import json
 from datetime import date
 
 # ==========================================
-# CONFIGURACIÓN MODO DIOS DE LA PROGRAMACIÓN
+# CONFIGURACIÓN MODO EXPERTO
 # ==========================================
 st.set_page_config(layout="wide", page_title="Quiniela Blindamos 2026", page_icon="🛡️")
 
-# Estilos visuales Dark Mode profesionales
 st.markdown("""
     <style>
     .stApp { background-color: #1a1a1a !important; color: #ffffff !important; }
@@ -24,7 +23,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# BASE DE DATOS Y LOGÍSITICA DE BANDERAS
+# BASE DE DATOS Y LOGÍSITICA
 # ==========================================
 ARCHIVO_DB = "db_blindamos.csv"
 
@@ -43,7 +42,7 @@ BANDERAS = {
     "ESTADOS UNIDOS": "🇺🇸", "USA": "🇺🇸", "PARAGUAY": "🇵🇾",
     "CATAR": "🇶🇦", "QATAR": "🇶🇦", "SUIZA": "🇨🇭", "SWITZERLAND": "🇨🇭",
     "BRASIL": "🇧🇷", "BRAZIL": "🇧🇷", "MARRUECOS": "🇲🇦", "MOROCCO": "🇲🇦",
-    "HAITÍ": "🇭🇹", "HAITI": "🇭🇹", "ESCOCIA": "🏴%f3%a0%81%a7%f3%a0%81%a3%f3%a0%81%b3%f3%a0%81%b4%f3%a0%81%b3%f3%a0%81%b7", "SCOTLAND": "🏴%f3%a0%81%a7%f3%a0%81%a3%f3%a0%81%b3%f3%a0%81%b4%f3%a0%81%b3%f3%a0%81%b7",
+    "HAITÍ": "🇭🇹", "HAITI": "🇭🇹", "ESCOCIA": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "SCOTLAND": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
     "AUSTRALIA": "🇦🇺", "TURQUÍA": "🇹🇷", "TURKEY": "🇹🇷", "TURQUIA": "🇹🇷",
     "ALEMANIA": "🇩🇪", "GERMANY": "🇩🇪", "CURAZAO": "🇨🇼", "CURACAO": "🇨🇼",
     "PAÍSES BAJOS": "🇳🇱", "PAISES BAJOS": "🇳🇱", "NETHERLANDS": "🇳🇱", "JAPÓN": "🇯🇵", "JAPON": "🇯🇵", "JAPAN": "🇯🇵",
@@ -55,7 +54,7 @@ BANDERAS = {
     "RI DE IRÁN": "🇮🇷", "IRÁN": "🇮🇷", "IRAN": "🇮🇷", "NUEVA ZELANDA": "🇳🇿", "NEW ZEALAND": "🇳🇿",
     "FRANCIA": "🇫🇷", "FRANCE": "🇫🇷", "SENEGAL": "🇸🇳", "IRAK": "🇮🇶", "IRAQ": "🇮🇶", "NORUEGA": "🇳🇴", "NORWAY": "🇳🇴",
     "ARGENTINA": "🇦🇷", "ARGELIA": "🇩🇿", "ALGERIA": "🇩🇿", "AUSTRIA": "🇦🇹", "JORDANIA": "🇯🇴", "JORDAN": "🇯🇴",
-    "PORTUGAL": "🇵🇹", "RD CONGO": "🇨🇩", "CONGO": "🇨🇩", "INGLATERRA": "🏴%f3%a0%81%a7%f3%a0%81%a2%f3%a0%81%b5%f3%a0%81%b4%f3%a0%81%b4%f3%a0%81%b7", "ENGLAND": "🏴%f3%a0%81%a7%f3%a0%81%a2%f3%a0%81%b5%f3%a0%81%b4%f3%a0%81%b4%f3%a0%81%b7",
+    "PORTUGAL": "🇵🇹", "RD CONGO": "🇨🇩", "CONGO": "🇨🇩", "INGLATERRA": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "ENGLAND": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
     "CROACIA": "🇭🇷", "CROATIA": "🇭🇷", "GHANA": "🇬🇭", "PANAMÁ": "🇵🇦", "PANAMA": "🇵🇦",
     "UZBEKISTÁN": "🇺🇿", "UZBEKISTAN": "🇺🇿", "COLOMBIA": "🇨🇴", "VENEZUELA": "🇻🇪", "VEN": "🇻🇪"
 }
@@ -64,9 +63,6 @@ def obtener_bandera(pais):
     if pd.isna(pais): return "🏳️"
     return BANDERAS.get(str(pais).strip().upper(), "🏳️")
 
-# ==========================================
-# BASE DE DATOS FIJA INCORPORADA (CALENDARIO OFICIAL)
-# ==========================================
 JUEGOS_FIXTURE = [
     {"DATE": "Jueves, 11 de junio 2026", "TIME": "15:00", "HOME TEAM": "MÉXICO", "AWAY TEAM": "SUDÁFRICA", "STAGE": "Grupo A"},
     {"DATE": "Jueves, 11 de junio 2026", "TIME": "22:00", "HOME TEAM": "REPÚBLICA DE COREA", "AWAY TEAM": "REPÚBLICA CHECA", "STAGE": "Grupo A"},
@@ -134,79 +130,4 @@ JUEGOS_FIXTURE = [
     {"DATE": "Viernes, 26 de junio 2026", "TIME": "20:00", "HOME TEAM": "URUGUAY", "AWAY TEAM": "ESPAÑA", "STAGE": "Grupo H"},
     {"DATE": "Viernes, 26 de junio 2026", "TIME": "23:00", "HOME TEAM": "EGIPTO", "AWAY TEAM": "IRÁN", "STAGE": "Grupo G"},
     {"DATE": "Viernes, 26 de junio 2026", "TIME": "23:00", "HOME TEAM": "NUEVA ZELANDA", "AWAY TEAM": "BÉLGICA", "STAGE": "Grupo G"},
-    {"DATE": "Sábado, 27 de junio 2026", "TIME": "17:00", "HOME TEAM": "PANAMÁ", "AWAY TEAM": "INGLATERRA", "STAGE": "Grupo L"},
-    {"DATE": "Sábado, 27 de junio 2026", "TIME": "17:00", "HOME TEAM": "CROACIA", "AWAY TEAM": "GHANA", "STAGE": "Grupo L"},
-    {"DATE": "Sábado, 27 de junio 2026", "TIME": "19:30", "HOME TEAM": "COLOMBIA", "AWAY TEAM": "PORTUGAL", "STAGE": "Grupo K"},
-    {"DATE": "Sábado, 27 de junio 2026", "TIME": "19:30", "HOME TEAM": "RD CONGO", "AWAY TEAM": "UZBEKISTÁN", "STAGE": "Grupo K"},
-    {"DATE": "Sábado, 27 de junio 2026", "TIME": "22:00", "HOME TEAM": "ARGELIA", "AWAY TEAM": "AUSTRIA", "STAGE": "Grupo J"},
-    {"DATE": "Sábado, 27 de junio 2026", "TIME": "22:00", "HOME TEAM": "JORDANIA", "AWAY TEAM": "ARGENTINA", "STAGE": "Grupo J"}
-]
-
-@st.cache_resource
-def cargar_excel(): return pd.ExcelFile("excel-mundial-2026-multiideasweb.xlsx")
-
-if "logged_in" not in st.session_state: st.session_state.update({"logged_in": False, "usuario": "", "preds": {}})
-
-# ==========================================
-# SIDEBAR (CON EJEMPLO DE NOMBRE Y LOGO)
-# ==========================================
-with st.sidebar:
-    try:
-        st.image("logo.png", use_container_width=True)
-    except:
-        st.markdown("### 🛡️ TALLERES BLINDAMOS")
-        
-    st.subheader("Login / Registro")
-    # REQUISITO EXPLICITO: Ejemplo configurado con Alvaro Giménez
-    usuario_input = st.text_input("👤 Tu Nombre", placeholder="Ej: Alvaro Giménez").strip().upper()
-    pin_input = st.text_input("🔑 PIN (4+ dígitos)", type="password").strip()
-    
-    if st.button("Entrar / Registrarse"):
-        if len(usuario_input) > 1 and len(pin_input) >= 4:
-            db = cargar_db()
-            if usuario_input in db["Jugador"].values:
-                if str(db[db["Jugador"] == usuario_input].iloc[0]["PIN"]) == pin_input:
-                    preds_str = db[db["Jugador"] == usuario_input].iloc[0]["Predicciones"]
-                    st.session_state.update({"logged_in": True, "usuario": usuario_input, "preds": json.loads(preds_str) if pd.notna(preds_str) else {}})
-                    st.success(f"Bienvenido, {usuario_input}")
-                else: st.error("❌ Nombre de usuario ya tomado o PIN incorrecto.")
-            else:
-                db = pd.concat([db, pd.DataFrame([{"Jugador": usuario_input, "PIN": pin_input, "Puntos": 0, "Predicciones": "{}"}])], ignore_index=True)
-                guardar_db(db)
-                st.session_state.update({"logged_in": True, "usuario": usuario_input, "preds": {}})
-                st.success(f"✅ Registrado como {usuario_input}")
-        else: st.error("❌ Datos incompletos.")
-        
-    if st.session_state["logged_in"]:
-        st.info(f"Conectado: {st.session_state['usuario']}")
-
-# ==========================================
-# MOTOR PRINCIPAL
-# ==========================================
-try:
-    xls = cargar_excel()
-    pestanas_ocultas = ["SETTINGS", "PRINT", "POOL", "PREDICTOR", "SCORES", "HOME", "FIXTURE"]
-    standings_bloqueados = ["ROUND 32", "ROUND 16", "QUARTER", "SEMI", "FINAL"]
-    tabs_finales = ["🏠 INICIO", "🏆 RANKING OFICIAL", "FIXTURE"] + [h for h in xls.sheet_names if str(h).strip().upper() not in pestanas_ocultas]
-    tabs = st.tabs(tabs_finales)
-    
-    for idx, nombre_hoja in enumerate(tabs_finales):
-        with tabs[idx]:
-            if nombre_hoja == "🏠 INICIO":
-                st.markdown("## 🛡️ Centro de Control Quiniela 2026")
-                st.markdown("---")
-                st.markdown("### Bienvenido al sistema élite de pronósticos.")
-                st.markdown("**Instrucciones:**\n1. Toca la flecha **>** (arriba a la izquierda) en tu móvil para abrir el menú.\n2. Ingresa tu Nombre y PIN.\n3. Ve a **FIXTURE** para cargar predicciones.\n4. Guarda antes de salir. Los partidos se bloquean al iniciar.")
-                st.info("⚡ Alta Seguridad. Cifrado activo.")
-                
-            elif nombre_hoja == "🏆 RANKING OFICIAL":
-                db = cargar_db()
-                if not db.empty:
-                    st.dataframe(db[["Jugador", "Puntos"]].sort_values(by="Puntos", ascending=False), use_container_width=True, hide_index=True)
-                else: st.warning("Aún no hay jugadores registrados.")
-            
-            elif str(nombre_hoja).strip().upper() == "FIXTURE":
-                df_fix = pd.DataFrame(JUEGOS_FIXTURE)
-                with st.form("f"):
-                    st.write("---")
-                    bloqueo_date = date
+    {"DATE": "Sábado, 27 de junio 2026", "TIME": "17:00", "HOME TEAM": "PANAMÁ", "AWAY TEAM": "INGL
